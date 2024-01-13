@@ -69,6 +69,7 @@ TrackRoll _currentTrackRollEnd;
 bool _currentTrackHasLiftHill;
 OpenRCT2::SelectedAlternative _currentTrackAlternative{};
 OpenRCT2::TrackElemType _selectedTrackType;
+uint8_t _currentTrackType;
 
 TrackRoll _previousTrackRollEnd;
 TrackPitch _previousTrackPitchEnd;
@@ -152,9 +153,9 @@ void RideConstructionStart(Ride& ride)
  */
 static void ride_remove_cable_lift(Ride& ride)
 {
-    if (ride.lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT)
+    if (ride.lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT || ride.lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
     {
-        ride.lifecycleFlags &= ~RIDE_LIFECYCLE_CABLE_LIFT;
+        ride.lifecycleFlags &= ~(RIDE_LIFECYCLE_CABLE_LIFT | RIDE_LIFECYCLE_CABLE_LAUNCH);
         auto spriteIndex = ride.cableLift;
         do
         {
@@ -1083,6 +1084,8 @@ int32_t RideInitialiseConstructionWindow(Ride& ride)
 
     if (ride.getRideTypeDescriptor().HasFlag(RtdFlag::startConstructionInverted))
         _currentTrackAlternative.set(AlternativeTrackFlag::inverted);
+
+    _currentTrackType = ride.type;
 
     _previousTrackRollEnd = TrackRoll::None;
     _previousTrackPitchEnd = TrackPitch::None;

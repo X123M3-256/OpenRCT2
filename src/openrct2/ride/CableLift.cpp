@@ -72,9 +72,20 @@ Vehicle* CableLiftSegmentCreate(
     z += ride.getRideTypeDescriptor().Heights.VehicleZOffset;
 
     current->MoveTo({ 16, 16, z });
-    current->SetTrackType(TrackElemType::CableLiftHill);
-    current->SetTrackDirection(current->Orientation >> 3);
-    current->track_progress = 164;
+
+    // TODO detect based on track piece - that would allow different types of cable lift pieces
+    if (!ride.getRideTypeDescriptor().HasFlag(RtdFlag::allowCableLaunch))
+    {
+        current->SetTrackType(TrackElemType::CableLiftHill);
+        current->SetTrackDirection(current->Orientation >> 3);
+        current->track_progress = 164;
+    }
+    else
+    {
+        current->SetTrackType(TrackElemType::CableLaunch);
+        current->SetTrackDirection(current->Orientation >> 3);
+        current->track_progress = 80;
+    }
     current->Flags = VehicleFlags::CollisionDisabled;
     current->SetState(Vehicle::Status::MovingToEndOfStation, 0);
     current->num_peeps = 0;
@@ -230,6 +241,11 @@ void Vehicle::CableLiftUpdateArriving()
         SetState(Vehicle::Status::MovingToEndOfStation, sub_state);
 }
 
+/**
+ *
+ *  rct2: 0x006DEF56
+ */
+
 bool Vehicle::CableLiftUpdateTrackMotionForwards()
 {
     auto curRide = GetRide();
@@ -240,6 +256,10 @@ bool Vehicle::CableLiftUpdateTrackMotionForwards()
     {
         auto trackType = GetTrackType();
         if (trackType == TrackElemType::CableLiftHill && track_progress == 160)
+        {
+            _vehicleMotionTrackFlags |= VEHICLE_UPDATE_MOTION_TRACK_FLAG_1;
+        }
+        else if (trackType == TrackElemType::CableLaunch && track_progress == 56)
         {
             _vehicleMotionTrackFlags |= VEHICLE_UPDATE_MOTION_TRACK_FLAG_1;
         }
@@ -266,6 +286,7 @@ bool Vehicle::CableLiftUpdateTrackMotionForwards()
             TrackLocation = { output, outputZ };
             SetTrackDirection(outputDirection);
             SetTrackType(output.element->AsTrack()->GetTrackType());
+            brake_speed = output.element->AsTrack()->GetBrakeBoosterSpeed();
             trackProgress = 0;
         }
 

@@ -651,3 +651,9 @@ namespace OpenRCT2::AlpineRC
 TrackPaintFunction GetTrackPaintFunctionClassicWoodenRC(OpenRCT2::TrackElemType trackType);
 TrackPaintFunction GetTrackPaintFunctionClassicStandUpRC(OpenRCT2::TrackElemType trackType);
 TrackPaintFunction GetTrackPaintFunctionClassicWoodenTwisterRC(OpenRCT2::TrackElemType trackType);
+namespace OpenRCT2::HydraulicLaunchedRC
+{
+    TrackPaintFunction GetTrackPaintFunction(OpenRCT2::TrackElemType trackType);
+    TrackPaintFunction GetTrackPaintFunctionAlt1(OpenRCT2::TrackElemType trackType);
+    TrackPaintFunction GetTrackPaintFunctionAlt2(OpenRCT2::TrackElemType trackType);
+} // namespace OpenRCT2::HydraulicLaunchedRC

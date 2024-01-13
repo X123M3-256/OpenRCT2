@@ -378,7 +378,12 @@ namespace OpenRCT2::TrackMetaData
         { 4, 1, 0,152, -32, 96 },   // TrackElemType::RightEighthDiveLoopUpToOrthogonal
         { 0, 7,152, 0, -96, -32 },   // TrackElemType::LeftEighthDiveLoopDownToDiag 
         { 0, 4,152, 0, -96, 32 },   // TrackElemType::RightEighthDiveLoopDownToDiag
-        { 4, 4, 16, 0, -32, 32 }   // TrackElemType::DiagDown25Brakes
+        { 4, 4, 16, 0, -32, 32 },   // TrackElemType::DiagDown25Brakes
+        { 0, 0, 0, 0, -32, 0 },    // TrackElemType::CableLaunch
+        { 0, 0, 0, 0, 0, 0 },      // TrackElemType::MagneticBrakeFlat
+        { 4, 4, 0, 0, -32, 32 },   // TrackElemType::MagneticBrakeDiagFlat
+        { 0, 0, 16, 0, 0, 0 },     // TrackElemType::MagneticBrakeDown25
+        { 4, 4, 16, 0, -32, 32 },  // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kTrackCoordinates) == EnumValue(TrackElemType::Count));
     
@@ -733,6 +738,11 @@ namespace OpenRCT2::TrackMetaData
         165, // TrackElemType::LeftEighthDiveLoopDownToDiag  
         165, // TrackElemType::RightEighthDiveLoopDownToDiag      
         45, // TrackElemType::DiagDown25Brakes
+        96, // TrackElemType::CableLaunch
+        32, // TrackElemType::MagneticBrakeFlat
+        45, // TrackElemType::MagneticBrakeDiagFlat
+        33, // TrackElemType::MagneticBrakeDown25
+        45, // TrackElemType::MagneticBrakeDiagDown25
     };
 
     static_assert(std::size(kTrackPieceLengths) == EnumValue(TrackElemType::Count));
@@ -1089,6 +1099,11 @@ namespace OpenRCT2::TrackMetaData
         { TrackCurve::None, TrackElemType::RightEighthDiveLoopUpToOrthogonal  },             // TrackElemType::LeftEighthDiveLoopDownToDiag  
         { TrackCurve::None, TrackElemType::LeftEighthDiveLoopUpToOrthogonal },             // TrackElemType::RightEighthDiveLoopDownToDiag 
         { TrackElemType::DiagDown25Brakes, TrackElemType::DiagDown25Brakes }, // TrackElemType::DiagDown25Brakes
+        { TrackCurve::None, TrackCurve::None },                                            // TrackElemType::CableLaunch
+        { TrackElemType::MagneticBrakeFlat, TrackElemType::MagneticBrakeFlat },            // TrackElemType::MagneticBrakeFlat
+        { TrackElemType::MagneticBrakeDiagFlat, TrackElemType::MagneticBrakeDiagFlat },    // TrackElemType::MagneticBrakeDiagFlat           
+        { TrackElemType::MagneticBrakeDown25, TrackElemType::MagneticBrakeDown25 },        // TrackElemType::MagneticBrakeDown25
+        { TrackElemType::MagneticBrakeDiagDown25, TrackElemType::MagneticBrakeDiagDown25 },// TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kTrackCurveChain) == EnumValue(TrackElemType::Count));
     
@@ -1633,6 +1648,11 @@ namespace OpenRCT2::TrackMetaData
         TrackElemType::None, // TrackElemType::LeftEighthDiveLoopDownToDiag 
         TrackElemType::None, // TrackElemType::RightEighthDiveLoopDownToDiag
         TrackElemType::None, // TrackElemType::DiagDown25Brakes
+        TrackElemType::None, // TrackElemType::CableLaunch
+        TrackElemType::None, // TrackElemType::MagneticBrakeFlat
+        TrackElemType::None, // TrackElemType::MagneticBrakeDiagFlat  
+        TrackElemType::None, // TrackElemType::MagneticBrakeDown25
+        TrackElemType::None, // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kAlternativeTrackTypes) == EnumValue(TrackElemType::Count));
     
@@ -1988,6 +2008,11 @@ namespace OpenRCT2::TrackMetaData
         458752, // TrackElemType::LeftEighthDiveLoopDownToDiag 
         458752, // TrackElemType::RightEighthDiveLoopDownToDiag
         109824, // TrackElemType::DiagDown25Brakes
+        90112,  // TrackElemType::CableLaunch             TODO
+        90112,  // TrackElemType::MagneticBrakeFlat
+        90112,  // TrackElemType::MagneticBrakeDiagFlat  
+        90112,  // TrackElemType::MagneticBrakeDown25
+        90112,  // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kTrackPricing) == EnumValue(TrackElemType::Count));
     
@@ -2343,6 +2368,11 @@ namespace OpenRCT2::TrackMetaData
         TrackElemType::RightEighthDiveLoopDownToDiag,   // TrackElemType::LeftEighthDiveLoopDownToDiag 
         TrackElemType::LeftEighthDiveLoopDownToDiag,    // TrackElemType::RightEighthDiveLoopDownToDiag
         TrackElemType::DiagDown25Brakes,
+        TrackElemType::CableLaunch,                     // TrackElemType::CableLaunch
+        TrackElemType::MagneticBrakeFlat,               // TrackElemType::MagneticBrakeFlat
+        TrackElemType::MagneticBrakeDiagFlat,           // TrackElemType::MagneticBrakeDiagFlat  
+        TrackElemType::MagneticBrakeDown25,             // TrackElemType::MagneticBrakeDown25
+        TrackElemType::MagneticBrakeDiagDown25          // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kTrackElementMirrorMap) == EnumValue(TrackElemType::Count));
     
@@ -2698,6 +2728,11 @@ namespace OpenRCT2::TrackMetaData
         (1 << 0) | (1 << 5), // TrackElemType::LeftEighthDiveLoopDownToDiag 
         (1 << 0) | (1 << 5), // TrackElemType::RightEighthDiveLoopDownToDiag
         (1 << 3), // TrackElemType::DiagDown25Brakes
+        (1 << 0) | (1 << 1), // TrackElemType::CableLaunch
+        (1 << 0),            // TrackElemType::MagneticBrakeFlat
+        (1 << 0),            // TrackElemType::MagneticBrakeDiagFlat  
+        (1 << 0),            // TrackElemType::MagneticBrakeDown25
+        (1 << 0),            // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kTrackHeightMarkerPositions) == EnumValue(TrackElemType::Count));
     
@@ -3056,6 +3091,11 @@ namespace OpenRCT2::TrackMetaData
         /* TrackElemType::LeftEighthDiveLoopDownToDiag     */   TRACK_ELEM_FLAG_DOWN | TRACK_ELEM_FLAG_STARTS_AT_HALF_HEIGHT | TRACK_ELEM_FLAG_INVERSION_TO_NORMAL,
         /* TrackElemType::RightEighthDiveLoopDownToDiag    */   TRACK_ELEM_FLAG_DOWN | TRACK_ELEM_FLAG_STARTS_AT_HALF_HEIGHT | TRACK_ELEM_FLAG_INVERSION_TO_NORMAL,
         /* TrackElemType::DiagDown25Brakes                       */   TRACK_ELEM_FLAG_DOWN | TRACK_ELEM_FLAG_STARTS_AT_HALF_HEIGHT,
+        /* TrackElemType::CableLaunch                            */   0,
+        /* TrackElemType::MagneticBrakeFlat                      */   0,
+        /* TrackElemType::MagneticBrakeDiagFlat                  */   0,
+        /* TrackElemType::MagneticBrakeDown25                    */   TRACK_ELEM_FLAG_DOWN | TRACK_ELEM_FLAG_STARTS_AT_HALF_HEIGHT,
+        /* TrackElemType::MagneticBrakeDiagDown25                */   TRACK_ELEM_FLAG_DOWN | TRACK_ELEM_FLAG_STARTS_AT_HALF_HEIGHT,
     };
     static_assert(std::size(kTrackFlags) == EnumValue(TrackElemType::Count));
     // clang-format on
@@ -3415,6 +3455,11 @@ namespace OpenRCT2::TrackMetaData
         { TrackGroup::diveLoop,                          TrackPitch::Down60,           TrackPitch::None,           TrackRoll::None,        TrackRoll::UpsideDown,  -56 }, // TrackElemType::LeftEighthDiveLoopDownToDiag 
         { TrackGroup::diveLoop,                          TrackPitch::Down60,           TrackPitch::None,           TrackRoll::None,        TrackRoll::UpsideDown,  -56 }, // TrackElemType::RightEighthDiveLoopDownToDiag
         { TrackGroup::inclinedBrakes,                    TrackPitch::Down25,           TrackPitch::Down25,         TrackRoll::None,        TrackRoll::None,       0    }, // TrackElemType::DiagDown25
+        { TrackGroup::cableLaunch,                       TrackPitch::None,             TrackPitch::None,           TrackRoll::None,        TrackRoll::None,       0 }, // TrackElemType::CableLaunch
+        { TrackGroup::magneticBrake,                     TrackPitch::None,             TrackPitch::None,           TrackRoll::None,        TrackRoll::None,       0 }, // TrackElemType::MagneticBrakeFlat
+        { TrackGroup::magneticBrake,                     TrackPitch::None,             TrackPitch::None,           TrackRoll::None,        TrackRoll::None,       0 }, // TrackElemType::MagneticBrakeDiagFlat  
+        { TrackGroup::magneticBrake,                     TrackPitch::Down25,           TrackPitch::Down25,         TrackRoll::None,        TrackRoll::None,       0 }, // TrackElemType::MagneticBrakeDown25 
+        { TrackGroup::magneticBrake,                     TrackPitch::Down25,           TrackPitch::Down25,         TrackRoll::None,        TrackRoll::None,       0 }, // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kTrackDefinitions) == EnumValue(TrackElemType::Count));
 
@@ -3479,7 +3524,8 @@ namespace OpenRCT2::TrackMetaData
         SpinFunction::R9,   SpinFunction::L9,   SpinFunction::R9,   SpinFunction::L9,   SpinFunction::R9,   SpinFunction::L9,
         SpinFunction::R9,   SpinFunction::None, SpinFunction::None, SpinFunction::None, SpinFunction::None, SpinFunction::None,
         SpinFunction::None, SpinFunction::None, SpinFunction::None, SpinFunction::L9,   SpinFunction::R9,   SpinFunction::L9,
-        SpinFunction::R9,   SpinFunction::None
+        SpinFunction::R9,   SpinFunction::None, SpinFunction::None, SpinFunction::None, SpinFunction::None, SpinFunction::None,
+        SpinFunction::None
     };
     static_assert(std::size(kTrackTypeToSpinFunction) == EnumValue(TrackElemType::Count));
 
@@ -4842,6 +4888,11 @@ namespace OpenRCT2::TrackMetaData
         STR_DIVE_LOOP_LEFT,                // TrackElemType::LeftEighthDiveLoopDownToDiag
         STR_DIVE_LOOP_RIGHT,               // TrackElemType::RightEighthDiveLoopDownToDiag
         STR_BRAKES,                        // TrackElemType::DiagDown25Brakes
+        STR_CABLE_LAUNCH,                  // TrackElemType::CableLaunch
+        STR_MAGNETIC_BRAKE,                // TrackElemType::MagneticBrakeFlat
+        STR_MAGNETIC_BRAKE,                // TrackElemType::MagneticBrakeDiagFlat
+        STR_MAGNETIC_BRAKE,                // TrackElemType::MagneticBrakeDown25
+        STR_MAGNETIC_BRAKE,                // TrackElemType::MagneticBrakeDiagDown25
     };
     static_assert(std::size(kRideConfigurationStringIds) == EnumValue(TrackElemType::Count));
 
@@ -12122,6 +12173,19 @@ namespace OpenRCT2::TrackMetaData
         .clearance = { -96, 32, 0, 64, { 0b0010, 0 }, 0 },
         .allowedWallEdges = 0b0000,
     };
+    static constexpr SequenceDescriptor kCableLaunchSeq0 = {
+        .clearance = { 0, 0, 0, 0, { 0b1111, 0 }, 0 },
+        .allowedWallEdges = 0b1010,
+        .woodenSupports = { WoodenSupportSubType::NeSw },
+        .metalSupports = { MetalSupportPlace::Centre, true },
+    };
+
+    static constexpr SequenceDescriptor kCableLaunchSeq1 = {
+        .clearance = { -32, 0, 0, 0, { 0b1111, 0 }, 0 },
+        .allowedWallEdges = 0b1010,
+        .woodenSupports = { WoodenSupportSubType::NeSw },
+        .metalSupports = { MetalSupportPlace::Centre, true },
+    };
 
     static constexpr SequenceData kSequenceDescriptorsByElement[] = {
         /* TrackElemType::Flat */ { 1, { kFlatSeq0 } },
@@ -13059,7 +13123,13 @@ namespace OpenRCT2::TrackMetaData
         { 6,
           { kRightEighthDiveLoopDownToDiagSeq0, kRightEighthDiveLoopDownToDiagSeq1, kRightEighthDiveLoopDownToDiagSeq2,
             kRightEighthDiveLoopDownToDiagSeq3, kRightEighthDiveLoopDownToDiagSeq4, kRightEighthDiveLoopDownToDiagSeq5 } },
-        /* TrackElemType::DiagDown25Brakes */ { 4, { kDiagDown25Seq0, kDiagDown25Seq1, kDiagDown25Seq2, kDiagDown25Seq3 } }
+        /* TrackElemType::DiagDown25Brakes */ { 4, { kDiagDown25Seq0, kDiagDown25Seq1, kDiagDown25Seq2, kDiagDown25Seq3 } },
+        /* TrackElemType::CableLaunch */ { 2, { kCableLaunchSeq0, kCableLaunchSeq1 } },
+        /* TrackElemType::MagneticBrakeFlat */ { 1, { kFlatSeq0 } },
+        /* TrackElemType::MagneticBrakeDiagFlat */ { 4, { kDiagFlatSeq0, kDiagFlatSeq1, kDiagFlatSeq2, kDiagFlatSeq3 } },
+        /* TrackElemType::MagneticBrakeDown25 */ { 1, { kDown25Seq0 } },
+        /* TrackElemType::MagneticBrakeDiagDown25 */
+        { 4, { kDiagDown25Seq0, kDiagDown25Seq1, kDiagDown25Seq2, kDiagDown25Seq3 } },
     };
 
 #pragma endregion

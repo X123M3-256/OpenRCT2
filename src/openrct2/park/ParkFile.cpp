@@ -1232,6 +1232,21 @@ namespace OpenRCT2
                                         if (trackType == TrackElemType::BlockBrakes)
                                             trackElement->SetBrakeBoosterSpeed(kRCT2DefaultBlockBrakeSpeed);
                                     }
+                                    // TODO remove
+                                    // if(trackType==TrackElemType::DiagFlatToUp60LongBase)trackElement->SetTrackType(TrackElemType::CableLaunch);
+                                    // else
+                                    // if(trackType==TrackElemType::DiagUp60ToFlatLongBase)trackElement->SetTrackType(TrackElemType::MagneticBrakeFlat);
+                                    // else
+                                    // if(trackType==TrackElemType::MagneticBrakeFlat)trackElement->SetTrackType(TrackElemType::MagneticBrakeDown25);
+                                    // else
+                                    // if(trackType==TrackElemType::MagneticBrakeDiagFlat)trackElement->SetTrackType(TrackElemType::MagneticBrakeDown25);
+                                    // else
+                                    // if(trackType==TrackElemType::MagneticBrakeDown25)trackElement->SetTrackType(TrackElemType::MagneticBrakeDiagDown25);
+                                    /*if(trackElement->GetRideType()==RIDE_TYPE_LSM_LAUNCHED_ROLLER_COASTER)trackElement->SetRideType(RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER);
+                                    else
+                                    if(trackElement->GetRideType()==RIDE_TYPE_CLASSIC_WOODEN_TWISTER_ROLLER_COASTER)trackElement->SetRideType(RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_1);
+                                    else
+                                    if(trackElement->GetRideType()==RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER)trackElement->SetRideType(RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_2);*/
                                 }
                                 else if (
                                     it.element->GetType() == TileElementType::SmallScenery && os.GetHeader().TargetVersion < 23)
@@ -1414,6 +1429,13 @@ namespace OpenRCT2
 
                     // Status
                     cs.ReadWrite(ride.type);
+                    /*
+                    if (cs.GetMode() == OrcaStream::Mode::READING && ride.type ==
+                    RIDE_TYPE_CLASSIC_STAND_UP_ROLLER_COASTER)//Import TODO remove
+                    {
+                    ride.type = RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER;
+                    }*/
+
                     cs.ReadWrite(ride.subtype);
                     cs.ReadWrite(ride.mode);
                     cs.ReadWrite(ride.status);

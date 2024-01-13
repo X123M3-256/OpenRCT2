@@ -43,6 +43,7 @@
 #include "rtd/coaster/GigaCoaster.h"
 #include "rtd/coaster/HeartlineTwisterCoaster.h"
 #include "rtd/coaster/HybridCoaster.h"
+#include "rtd/coaster/HydraulicLaunchedRollerCoaster.h"
 #include "rtd/coaster/HyperTwister.h"
 #include "rtd/coaster/Hypercoaster.h"
 #include "rtd/coaster/InvertedHairpinCoaster.h"
@@ -207,6 +208,82 @@ const CarEntry kCableLiftVehicle = {
     },
 };
 
+
+const CarEntry kCableLaunchVehicle = {
+    /* .TabRotationMask = */ 31,
+    /* .spacing = */ 0,
+    /* .car_mass = */ 0,
+    /* .tab_height = */ 0,
+    /* .num_seats = */ 0,
+    /* .sprite_width = */ 0,
+    /* .sprite_height_negative = */ 0,
+    /* .sprite_height_positive = */ 0,
+    /* .animation = */ CarEntryAnimation::None,
+    /* .flags = */ 0,
+    /* .base_num_frames = */ 1,
+    /* .base_image_id = */ SPR_TRACKS_CATCH_CAR_BEGIN,
+    /* .SpriteGroups[SlopeFlat] = */ SPR_TRACKS_CATCH_CAR_BEGIN, SpritePrecision::Sprites4,
+    /* .SpriteGroups[Slopes12] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes25] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes42] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes60] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes75] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes90] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[SlopesLoop] = */           { 0, SpritePrecision::None},
+    /* .SpriteGroups[SlopeInverted] = */        { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes8] = */              { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes16] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes50] = */             { 0, SpritePrecision::None},
+    /* .SpriteGroups[FlatBanked22] = */         { 0, SpritePrecision::None},
+    /* .SpriteGroups[FlatBanked45] = */         { 0, SpritePrecision::None},
+    /* .SpriteGroups[FlatBanked67] = */         { 0, SpritePrecision::None},
+    /* .SpriteGroups[FlatBanked90] = */         { 0, SpritePrecision::None},
+    /* .SpriteGroups[InlineTwists] = */         { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes12Banked22] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes8Banked22] = */      { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes25Banked22] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes8Banked22] = */      { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes16Banked22] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes16Banked45] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes25Banked45] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes12Banked45] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes25Banked67] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes25Banked90] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes25InlineTwists] = */ { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes42Banked22] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes42Banked45] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes42Banked67] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes42Banked90] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Slopes60Banked22] = */     { 0, SpritePrecision::None},
+    /* SpriteGroupType::Slopes60Banked45 */     { 0, SpritePrecision::None},
+    /* SpriteGroupType::Slopes60Banked67 */     { 0, SpritePrecision::None},
+    /* SpriteGroupType::Slopes60Banked90 */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[Corkscrews] = */           { 0, SpritePrecision::None},
+    /* .SpriteGroups[RestraintAnimation] = */   { 0, SpritePrecision::None},
+    /* .SpriteGroups[CurvedLiftHillUp] = */     { 0, SpritePrecision::None},
+    /* .SpriteGroups[CurvedLiftHillDown] = */   { 0, SpritePrecision::None},
+    /* .no_vehicle_images = */ 0,
+    /* .no_seating_rows = */ 0,
+    /* .spinning_inertia = */ 0,
+    /* .spinning_friction = */ 255,
+    /* .friction_sound_id = */ OpenRCT2::Audio::SoundId::LiftClassic,
+    /* .log_flume_reverser_vehicle_type = */ 0,
+    /* .sound_range = */ 0,
+    /* .double_sound_frequency = */ 0,
+    /* .powered_acceleration = */ 0,
+    /* .powered_max_speed = */ 0,
+    /* .PaintStyle = */ 0,
+    /* .effect_visual = */ 1,
+    /* .draw_order = */ 14,
+    /* .num_vertical_frames_override = */ 0,
+    /* .peep_loading_positions = */ 0,
+    /* .AnimationExponent = */ 0,
+    /* .AnimationFrames = */ 0,
+    /* .SteamEffectType.longitudinal = */ 0,
+    /* .SteamEffectType.vertical = */ 0
+};
+	
+
 /* rct2: 0x009A0AA0 */
 const uint16_t kRideFilmLength[3] = {
     5000, // MOUSE_TAILS
@@ -359,6 +436,9 @@ constexpr RideTypeDescriptor kRideTypeDescriptors[RIDE_TYPE_COUNT] = {
     /* RIDE_TYPE_CLASSIC_STAND_UP_ROLLER_COASTER    */ ClassicStandUpRollerCoasterRTD,
     /* RIDE_TYPE_LSM_LAUNCHED_ROLLER_COASTER        */ LSMLaunchedRollerCoasterRTD,
     /* RIDE_TYPE_CLASSIC_WOODEN_TWISTER_ROLLER_COASTER */ ClassicWoodenTwisterRollerCoasterRTD,
+    /* RIDE_TYPE_HYDRAULIC_LAUNCHED_COASTER         */ HydraulicLaunchedRollerCoasterRTD,
+    /* RIDE_TYPE_HYDRAULIC_LAUNCHED_COASTER_ALT1    */ HydraulicLaunchedRollerCoasterAlt1RTD,
+    /* RIDE_TYPE_HYDRAULIC_LAUNCHED_COASTER_ALT2    */ HydraulicLaunchedRollerCoasterAlt2RTD,
 };
 
 bool RideTypeDescriptor::HasFlag(RtdFlag flag) const

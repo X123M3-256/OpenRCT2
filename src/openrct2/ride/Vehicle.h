@@ -103,7 +103,7 @@ struct Vehicle : EntityBase
         Operating1A,
         Stopping1B,
         UnloadingPassengers1C,
-        StoppedByBlockBrakes
+        StoppedByBlockBrakes,
     };
 
     Type SubType;
@@ -227,6 +227,7 @@ struct Vehicle : EntityBase
     std::optional<EntityId> DodgemsCarWouldCollideAt(const CoordsXY& coords) const;
     int32_t UpdateTrackMotion(int32_t* outStation);
     int32_t CableLiftUpdateTrackMotion();
+    int32_t CableLaunchUpdateTrackMotion();
     GForces GetGForces() const;
     void SetMapToolbar() const;
     int32_t IsUsedInPairs() const;
@@ -294,6 +295,14 @@ private:
     void CableLiftUpdateDeparting();
     void CableLiftUpdateTravelling();
     void CableLiftUpdateArriving();
+    void CableLaunchUpdate();
+    bool CableLaunchUpdateTrackMotionForwards();
+    bool CableLaunchUpdateTrackMotionBackwards();
+    void CableLaunchUpdateMovingToEndOfStation();
+    void CableLaunchUpdateWaitingToDepart();
+    void CableLaunchUpdateDeparting();
+    void CableLaunchUpdateTravelling();
+    void CableLaunchUpdateArriving();
     void Sub6DBF3E();
     void UpdateMeasurements();
     void UpdateMovingToEndOfStation();
@@ -313,6 +322,7 @@ private:
     void FinishDeparting();
     void UpdateTravelling();
     void UpdateTravellingCableLift();
+    void UpdateTravellingCableLaunch();
     void UpdateTravellingBoat();
     void UpdateMotionBoatHire();
     void TryReconnectBoatToTrack(const CoordsXY& currentBoatLocation, const CoordsXY& trackCoords);
@@ -323,6 +333,7 @@ private:
     void UpdateArriving();
     void UpdateUnloadingPassengers();
     void UpdateWaitingForCableLift();
+    void UpdateWaitingForCableLaunch();
     void UpdateShowingFilm();
     void UpdateDoingCircusShow();
     void UpdateCrossings() const;
@@ -478,6 +489,7 @@ namespace OpenRCT2::VehicleFlags
                                                   // an individual car on a train
     constexpr uint32_t Crashed = (1 << 15);       // Car displays as smoke plume
     constexpr uint32_t CarIsReversed = (1 << 16); // Car is displayed running backwards
+    constexpr uint32_t LaunchBlockNotCleared = (1 << 17); // Vehicle has passed a launch but has not yet cleared the block
 } // namespace OpenRCT2::VehicleFlags
 
 enum

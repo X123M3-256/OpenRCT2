@@ -63,6 +63,7 @@
 #include "../world/tile_element/EntranceElement.h"
 #include "../world/tile_element/PathElement.h"
 #include "../world/tile_element/TrackElement.h"
+#include "CableLaunch.h"
 #include "CableLift.h"
 #include "RideAudio.h"
 #include "RideConstruction.h"
@@ -3773,19 +3774,63 @@ static bool RideGetStationTile(const Ride& ride, CoordsXYE* output)
     return false;
 }
 
+static void RideCreateCatchCar(Ride& ride)
+{
+    auto cableLiftLoc = ride.cableLiftLoc;
+    auto tileElement = MapGetTrackElementAt(cableLiftLoc);
+    int32_t direction = tileElement->GetDirection();
+
+    int segments = ride.getRideTypeDescriptor().CatchCarParameters.segments;
+
+    Vehicle* head = nullptr;
+    Vehicle* tail = nullptr;
+    uint32_t ebx = 0;
+    for (int32_t i = 0; i < segments; i++)
+    {
+        uint32_t edx = Numerics::ror32(0x15478, 10);
+        uint16_t var_44 = edx & 0xFFFF;
+        edx = Numerics::rol32(edx, 10) >> 1;
+        ebx -= edx;
+        int32_t remaining_distance = ebx;
+        ebx -= edx;
+
+        Vehicle* current;
+        current = CableLiftSegmentCreate(
+            ride, cableLiftLoc.x, cableLiftLoc.y, cableLiftLoc.z / 8, direction, var_44, remaining_distance, i == 0);
+        current->next_vehicle_on_train = EntityId::GetNull();
+        if (i == 0)
+        {
+            head = current;
+        }
+        else
+        {
+            tail->next_vehicle_on_train = current->Id;
+            tail->next_vehicle_on_ride = current->Id;
+            current->prev_vehicle_on_ride = tail->Id;
+        }
+        tail = current;
+    }
+    if (head != nullptr && tail != nullptr)
+    {
+        head->prev_vehicle_on_ride = tail->Id;
+        tail->next_vehicle_on_ride = head->Id;
+    }
+    head->CableLiftUpdateTrackMotion();
+}
+
 /**
  * Checks and initialises the cable lift track returns false if unable to find
  * appropriate track.
  *  rct2: 0x006D31A6
  */
-static ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool isApplying)
+ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool applyVehicle, bool applyTrack)
 {
     // Despawn existing cable lift tiles
     CoordsXYE stationTile;
     if (!RideGetStationTile(ride, &stationTile))
         return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION_OR_BLOCK_BRAKE };
 
-    if (isApplying)
+    if (applyTrack)
     {
         // In case circuit is incomplete, find the start of the track in order to ensure all tiles connected
         // to the station are cleared
@@ -3808,9 +3853,12 @@ static ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool isA
     if (cableLiftTileElement == nullptr)
         return { false };
 
+    int numTiles = 2;
+    bool isLaunch = ride.getRideTypeDescriptor().HasFlag(RtdFlag::allowCableLaunch); // TODO check type of track element instead
+    bool success = false;
     TrackCircuitIterator it;
     TrackCircuitIteratorBegin(&it, cableLiftCoords);
-    while (TrackCircuitIteratorPrevious(&it))
+    while (TrackCircuitIteratorPrevious(&it) && !success)
     {
         TileElement* tileElement = it.current.element;
         auto trackType = tileElement->AsTrack()->GetTrackType();
@@ -3823,22 +3871,114 @@ static ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool isA
             case TrackElemType::Up25ToUp60:
             case TrackElemType::Up60ToUp25:
             case TrackElemType::FlatToUp60LongBase:
+                // These track pieces only valid for cable lifts, not launches
+                if (isLaunch && !success)
+                    return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION_OR_BLOCK_BRAKE };
+                [[fallthrough]];
             case TrackElemType::Flat:
-                if (isApplying)
+                if (applyTrack)
                 {
                     GetTrackElementOriginAndApplyChanges(
                         { { it.current, tileElement->GetBaseZ() }, tileElement->GetDirection() }, trackType, 0, &tileElement,
                         { TrackElementSetFlag::cableLiftOn });
                 }
+                numTiles++;
                 break;
             case TrackElemType::EndStation:
             case TrackElemType::BlockBrakes:
-                return { true };
+                success = true;
+                break;
             default:
                 return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION_OR_BLOCK_BRAKE };
         }
     }
-    return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION_OR_BLOCK_BRAKE };
+
+    // Return if no station found
+    if (!success)
+        return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION_OR_BLOCK_BRAKE };
+
+    // If this is a launch, calculate the desired acceleration and initialize anti-rollback brakes
+    if (isLaunch && (applyVehicle || applyTrack))
+    {
+        // Somewhat empirical formula; about 1/3 of the launch run should be used to brake the catch car, but testing shows the
+        // ideal value to be a bit more than that for short launches and a bit less for longer ones.
+        int brakeTiles = (numTiles + 10) / 4;
+        // Make sure the acceleration section is always at least half of the launch. Launches of less than 7 tiles aren't really
+        // realistic but I want to allow them anyway, and they shouldn't be mostly brake. For very short launches this means the
+        // catch car will run into the end of the track but we tolerate this.
+        if (numTiles <= 7)
+            brakeTiles = numTiles / 2;
+
+        printf("Launch %d accel %d brake %d\n", numTiles, numTiles - brakeTiles, brakeTiles);
+
+        int targetSpeed = ride.launchSpeed;
+        int launchAccel = ((6 * (targetSpeed * targetSpeed)) / (4 * (numTiles - brakeTiles)));
+
+        // Set max acceleration at 10 tiles per second^2 (about 18.5m/s^2)
+        if (launchAccel > 210)
+        {
+            launchAccel = 210;
+        }
+        Vehicle* catchCar = GetEntity<Vehicle>(ride.cableLift);
+        // This shouldn't happen
+        if (catchCar == nullptr)
+            return { false };
+        catchCar->powered_acceleration = launchAccel;
+
+        if (applyTrack)
+        {
+            // Set first tile of cable launch end piece
+            cableLiftTileElement->AsTrack()->SetHasCableLift(true);
+            if (brakeTiles >= 2)
+                cableLiftTileElement->AsTrack()->SetCableLaunchIsBrakeSection(true);
+            else
+                cableLiftTileElement->AsTrack()->SetCableLaunchIsBrakeSection(false);
+            cableLiftTileElement->AsTrack()->SetCableLaunchFinState(CABLE_LAUNCH_FIN_STATE_RAISED);
+
+            // Set second tile of cable launch end piece
+            auto type = cableLiftTileElement->AsTrack()->GetTrackType();
+            uint8_t rotation = cableLiftTileElement->GetDirection();
+            CoordsXY offsets = { -32, 0 };
+            CoordsXYZD elem = { ride.cableLiftLoc.x, ride.cableLiftLoc.y, ride.cableLiftLoc.z, rotation };
+            elem += offsets.Rotate(rotation);
+            TrackElement* trackElement = MapGetTrackElementAtOfTypeSeq(elem, type, 1);
+            if (trackElement != nullptr)
+            {
+                trackElement->SetCableLaunchIsBrakeSection(true);
+                trackElement->SetHasCableLift(true);
+                trackElement->SetCableLaunchFinState(CABLE_LAUNCH_FIN_STATE_RAISED);
+            }
+
+            // Set remaining launch tiles
+            brakeTiles -= 2;
+            TrackCircuitIteratorBegin(&it, { cableLiftCoords });
+            while (TrackCircuitIteratorPrevious(&it))
+            {
+                TileElement* tileElement = it.current.element;
+                CoordsXYZ loc = { it.current.x, it.current.y, it.currentZ };
+                // Mark tile as launch track
+                tileElement->AsTrack()->SetHasCableLift(true);
+                if (brakeTiles > 0)
+                {
+                    // Mark tile as cable lift brake piece
+                    tileElement->AsTrack()->SetCableLaunchIsBrakeSection(true);
+                    brakeTiles--;
+                }
+                else
+                    tileElement->AsTrack()->SetCableLaunchIsBrakeSection(false);
+
+                if (tileElement->AsTrack()->GetTrackType() == TrackElemType::EndStation
+                    || tileElement->AsTrack()->GetTrackType() == TrackElemType::BlockBrakes)
+                    break;
+
+                // Set all fins to raised
+                tileElement->AsTrack()->SetCableLaunchFinState(CABLE_LAUNCH_FIN_STATE_RAISED);
+                MapInvalidateElement(loc, tileElement);
+            }
+        }
+    }
+
+    return { true };
 }
 
 /**
@@ -3861,58 +4001,25 @@ static ResultWithMessage RideCreateCableLift(RideId rideIndex, bool isApplying)
         return { false, STR_MULTICIRCUIT_NOT_POSSIBLE_WITH_CABLE_LIFT_HILL };
     }
 
-    if (count_free_misc_sprite_slots() <= 5)
+    if (count_free_misc_sprite_slots() <= ride->getRideTypeDescriptor().CatchCarParameters.segments)
     {
         return { false, STR_UNABLE_TO_CREATE_ENOUGH_VEHICLES };
     }
 
-    auto cableLiftInitialiseResult = RideInitialiseCableLiftTrack(*ride, isApplying);
+    // Create catch car
+    if (isApplying)
+    {
+        RideCreateCatchCar(*ride);
+        ride->lifecycleFlags |= ride->getRideTypeDescriptor().HasFlag(RtdFlag::allowCableLaunch) ? RIDE_LIFECYCLE_CABLE_LAUNCH
+                                                                                                 : RIDE_LIFECYCLE_CABLE_LIFT;
+    }
+
+    auto cableLiftInitialiseResult = RideInitialiseCableLiftTrack(*ride, isApplying, isApplying);
     if (!cableLiftInitialiseResult.Successful)
     {
         return { false, cableLiftInitialiseResult.Message };
     }
 
-    if (!isApplying)
-    {
-        return { true };
-    }
-
-    auto cableLiftLoc = ride->cableLiftLoc;
-    auto tileElement = MapGetTrackElementAt(cableLiftLoc);
-    int32_t direction = tileElement->GetDirection();
-
-    Vehicle* head = nullptr;
-    Vehicle* tail = nullptr;
-    uint32_t ebx = 0;
-    for (int32_t i = 0; i < 5; i++)
-    {
-        uint32_t edx = Numerics::ror32(0x15478, 10);
-        uint16_t var_44 = edx & 0xFFFF;
-        edx = Numerics::rol32(edx, 10) >> 1;
-        ebx -= edx;
-        int32_t remaining_distance = ebx;
-        ebx -= edx;
-
-        Vehicle* current = CableLiftSegmentCreate(
-            *ride, cableLiftLoc.x, cableLiftLoc.y, cableLiftLoc.z / 8, direction, var_44, remaining_distance, i == 0);
-        current->next_vehicle_on_train = EntityId::GetNull();
-        if (i == 0)
-        {
-            head = current;
-        }
-        else
-        {
-            tail->next_vehicle_on_train = current->Id;
-            tail->next_vehicle_on_ride = current->Id;
-            current->prev_vehicle_on_ride = tail->Id;
-        }
-        tail = current;
-    }
-    head->prev_vehicle_on_ride = tail->Id;
-    tail->next_vehicle_on_ride = head->Id;
-
-    ride->lifecycleFlags |= RIDE_LIFECYCLE_CABLE_LIFT;
-    head->CableLiftUpdateTrackMotion();
     return { true };
 }
 
@@ -4930,6 +5037,8 @@ OpenRCT2::BitSet<EnumValue(TrackGroup::count)> RideEntryGetSupportedTrackPieces(
           SpritePrecision::Sprites4, SpriteGroupType::Slopes25InlineTwists, SpritePrecision::Sprites4,
           SpriteGroupType::SlopesLoop, SpritePrecision::Sprites4, SpriteGroupType::SlopeInverted,
           SpritePrecision::Sprites4 }, // TrackGroup::diveLoop
+        {},                            // TODO fill these in
+        {},
     };
 
     static_assert(std::size(trackPieceRequiredSprites) == EnumValue(TrackGroup::count));
@@ -5999,8 +6108,9 @@ ResultWithMessage Ride::changeStatusCreateVehicles(bool isApplying, const Coords
         }
     }
 
-    if (rtd.HasFlag(RtdFlag::allowCableLiftHill) && (lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT_HILL_COMPONENT_USED)
-        && !(lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT))
+    if ((rtd.HasFlag(RtdFlag::allowCableLiftHill) || rtd.HasFlag(RtdFlag::allowCableLaunch))
+        && (lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT_HILL_COMPONENT_USED)
+        && !(lifecycleFlags & (RIDE_LIFECYCLE_CABLE_LIFT | RIDE_LIFECYCLE_CABLE_LAUNCH)))
     {
         const auto createCableLiftResult = RideCreateCableLift(id, isApplying);
         if (!createCableLiftResult.Successful)

@@ -119,6 +119,11 @@ public:
     uint8_t GetBrakeBoosterSpeed() const;
     void SetBrakeBoosterSpeed(uint8_t speed);
 
+    bool GetCableLaunchIsBrakeSection() const;
+    void SetCableLaunchIsBrakeSection(bool isBrake);
+    uint8_t GetCableLaunchFinState() const;
+    void SetCableLaunchFinState(uint8_t state);
+
     bool HasGreenLight() const;
     void SetHasGreenLight(bool on);
 

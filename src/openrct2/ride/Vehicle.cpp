@@ -53,6 +53,7 @@
 #include "../world/tile_element/SurfaceElement.h"
 #include "../world/tile_element/TrackElement.h"
 #include "../world/tile_element/WallElement.h"
+#include "CableLaunch.h"
 #include "CableLift.h"
 #include "Ride.h"
 #include "RideData.h"
@@ -1246,7 +1247,11 @@ void Vehicle::Update()
 {
     if (IsCableLift())
     {
-        CableLiftUpdate();
+        auto curRide = GetRide();
+        if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
+            CableLaunchUpdate();
+        else
+            CableLiftUpdate();
         return;
     }
 
@@ -1845,7 +1850,7 @@ void Vehicle::UpdateWaitingToDepart()
 
     SetState(Vehicle::Status::Departing);
 
-    if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT)
+    if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT || curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
     {
         CoordsXYE track;
         int32_t zUnused;
@@ -3171,7 +3176,6 @@ void Vehicle::UpdateTravelling()
 
     if (curRide->mode == RideMode::poweredLaunchPasstrough && velocity < 0)
         return;
-
     SetState(Vehicle::Status::Arriving);
     current_station = _vehicleStationIndex;
     var_C0 = 0;
@@ -3365,6 +3369,25 @@ void Vehicle::UpdateArriving()
             return;
         }
 
+        // This is triggered if train rolls back after cable launch and enters the station backwards; it should relaunch without
+        // unloading passengers
+        if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
+        {
+            printf("Detected rollback into station ride %d\n", curRide->id.ToUnderlying());
+            velocity = 0;
+
+            SetState(Vehicle::Status::WaitingForCableLift, 0);
+            // ClearFlag(VehicleFlags::PassedDeferredBlock);
+
+            // Recall catch car if it exists
+            Vehicle* cableLift = GetEntity<Vehicle>(curRide->cableLift);
+            if (cableLift != nullptr)
+            {
+                cableLift->SetState(Vehicle::Status::MovingToEndOfStation, 0);
+            }
+            return;
+        }
+
         if (NumLaps == curRide->numCircuits && HasFlag(VehicleFlags::ReverseInclineCompletedLap))
         {
             SetState(Vehicle::Status::Departing, 1);
@@ -3517,7 +3540,7 @@ void Vehicle::UpdateWaitingForCableLift()
     if (cableLift->status != Vehicle::Status::WaitingForPassengers)
         return;
 
-    cableLift->SetState(Vehicle::Status::WaitingToDepart, sub_state);
+    cableLift->SetState(Vehicle::Status::WaitingToDepart, 0);
     cableLift->cable_lift_target = Id;
 }
 
@@ -3573,9 +3596,38 @@ void Vehicle::UpdateTravellingCableLift()
         }
     }
 
-    if (velocity <= 439800)
+    if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
     {
-        acceleration = 4398;
+        Vehicle* catchCar = GetEntity<Vehicle>(curRide->cableLift);
+        if (catchCar != nullptr)
+        {
+            acceleration = (425 * catchCar->powered_acceleration - 85 * catchCar->speed) / 2;
+            // printf("accel %d speed  %d\n",acceleration,velocity);
+            //  Disconnect from catch car when the catch car reaches braking zone
+            auto trackType = GetTrackType();
+            if (trackType != TrackElemType::BlockBrakes
+                && ((trackType == TrackElemType::CableLaunch && track_progress > 32)
+                    || ((brake_speed >> 1) & CABLE_LAUNCH_IS_BRAKE_SECTION)))
+            {
+                // Correct for distance advanced past end of launch run
+                // printf("progress at disconnect %d\n",track_progress);
+                // printf("acceleration at disconnect %d\n",acceleration);
+                // printf("velocity at disconnect %d\n",velocity);
+                acceleration = -8 * track_progress * ((acceleration * 26563) / velocity);
+                // printf("final acceleration %d\n",acceleration);
+                SetState(Vehicle::Status::Travelling, 1);
+                UpdateTrackMotion(nullptr);
+                lost_time_out = 0; // TODO what is this for?
+                return;
+            }
+        }
+    }
+    else
+    {
+        if (velocity <= 439800)
+        {
+            acceleration = 4398;
+        }
     }
     int32_t curFlags = UpdateTrackMotion(nullptr);
 
@@ -3586,6 +3638,8 @@ void Vehicle::UpdateTravellingCableLift()
         return;
     }
 
+    // TODO figure out what the following code does because it doesn't seem like it should run for launches not starting from
+    // the station
     if (sub_state == 2)
         return;
 
@@ -5583,6 +5637,54 @@ void Vehicle::CheckAndApplyBlockSectionStopSite()
             }
             [[fallthrough]];
         case TrackElemType::DiagBlockBrakes:
+            if (status == Vehicle::Status::TravellingCableLift)
+                return;
+
+            // Check if this brake is the start of a cable launch
+            if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LIFT || curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
+            {
+                CoordsXYE track;
+                int32_t zUnused;
+                int32_t direction;
+                uint8_t trackDirection = GetTrackDirection();
+                if (TrackBlockGetNextFromZero(TrackLocation, *curRide, trackDirection, &track, &zUnused, &direction, false)
+                    && track.element != nullptr && track.element->AsTrack()->HasCableLift())
+                {
+                    if (velocity > kBlockBrakeBaseSpeed)
+                    {
+                        velocity -= velocity >> 3;
+                        acceleration = 0;
+                    }
+                    if (velocity > 0 && track_progress >= 18)
+                    {
+                        velocity = 0;
+                        acceleration = 0;
+                        if (!curRide->isBlockSectioned() || !trackElement->AsTrack()->IsBrakeClosed())
+                        {
+                            SetState(Vehicle::Status::WaitingForCableLift, sub_state);
+                        }
+                    }
+                    // Triggered if vehicle rolls back into block section
+                    else if (velocity < 0 && track_progress <= 18)
+                    {
+                        printf("Detected rollback into block ride %d\n", GetRide()->id.ToUnderlying());
+                        // We use NumLaps to flag if a rollback occured - TODO this is a bit of a hack
+                        velocity = 0;
+                        acceleration = 0;
+                        NumLaps++;
+                        SetState(Vehicle::Status::WaitingForCableLift, sub_state);
+                        // Recall catch car if it exists
+                        Vehicle* cableLift = GetEntity<Vehicle>(curRide->cableLift);
+                        if (cableLift != nullptr)
+                        {
+                            cableLift->SetState(Vehicle::Status::MovingToEndOfStation, 0);
+                        }
+                    }
+
+                    return;
+                }
+            }
+
             if (curRide->isBlockSectioned() && trackElement->AsTrack()->IsBrakeClosed())
                 ApplyStopBlockBrake();
             else
@@ -6936,7 +7038,7 @@ bool Vehicle::UpdateTrackMotionForwardsGetNewTrack(
         return false;
     }
 
-    if (trackType == TrackElemType::CableLiftHill && this == gCurrentVehicle)
+    if ((trackType == TrackElemType::CableLiftHill || trackType == TrackElemType::CableLaunch) && this == gCurrentVehicle)
     {
         _vehicleMotionTrackFlags |= VEHICLE_UPDATE_MOTION_TRACK_FLAG_11;
     }
@@ -7178,6 +7280,17 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
         else if (rideEntry.flags & RIDE_ENTRY_FLAG_RIDER_CONTROLS_SPEED && num_peeps > 0)
         {
             acceleration += CalculateRiderBraking();
+        }
+        else if (
+            trackType == TrackElemType::MagneticBrakeFlat || trackType == TrackElemType::MagneticBrakeDown25
+            || trackType == TrackElemType::MagneticBrakeDiagDown25)
+        {
+            if (_vehicleVelocityF64E08 < 550000)
+                acceleration -= 3 * _vehicleVelocityF64E08 / 2;
+            else
+            {
+                acceleration -= 825000;
+            }
         }
 
         if ((trackType == TrackElemType::Flat && curRide.getRideTypeDescriptor().HasFlag(RtdFlag::hasLsmBehaviourOnFlat))
@@ -7557,6 +7670,18 @@ bool Vehicle::UpdateTrackMotionBackwards(const CarEntry* carEntry, const Ride& c
             if (-(brakeSpeed << kTrackSpeedShiftAmount) > _vehicleVelocityF64E08)
             {
                 acceleration = _vehicleVelocityF64E08 * -16;
+            }
+        }
+
+        // Apply anti rollback brakes for cable lift
+        if (curRide.lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH
+            && (trackType == TrackElemType::CableLaunch || trackType == TrackElemType::Flat))
+        {
+            TrackElement* tileElement = MapGetTrackElementAtOfTypeSeq(TrackLocation, GetTrackType(), 0)->AsTrack();
+            if (tileElement != nullptr && tileElement->HasCableLift()
+                && tileElement->GetCableLaunchFinState() == CABLE_LAUNCH_FIN_STATE_RAISED)
+            {
+                acceleration = -350000 - (_vehicleVelocityF64E08 * 3);
             }
         }
 

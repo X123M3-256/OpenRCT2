@@ -226,6 +226,24 @@ struct RideLegacyBoosterSettings
                                    // multiplier.
 };
 
+struct RideCatchCarParameters
+{
+    const CarEntry* carEntry;
+    uint8_t segments;
+};
+
+struct RideAlternateTrack
+{
+    ride_type_t type;
+    uint32_t icon;
+};
+
+struct RideAlternateTrackList
+{
+    uint8_t count;
+    RideAlternateTrack list[4];
+};
+
 struct RatingsModifier
 {
     RatingsModifierType type;
@@ -433,6 +451,9 @@ enum class RtdFlag : uint8_t
     allowReversedTrains,
 
     requireExplicitListingInMusicObjects,
+
+    hasAlternateTrack,
+    allowCableLaunch,
 };
 
 /**
@@ -508,6 +529,8 @@ struct RideTypeDescriptor
 
     RideRatingsDescriptor RatingsData{};
 
+    RideCatchCarParameters CatchCarParameters = { nullptr, 0 };
+    RideAlternateTrackList AlternateTrackList = { 0, { { 0, 0 }, { 0, 0 }, { 0, 0 } } };
     UpdateRotatingFunction UpdateRotating = UpdateRotatingDefault;
 
     LightFXAddLightsMagicVehicleFunction LightFXAddLightsMagicVehicle = nullptr;
@@ -599,6 +622,7 @@ constexpr uint64_t kAllRideModesAvailable = EnumsToFlags(
     RideMode::poweredLaunchBlockSectioned);
 
 extern const CarEntry kCableLiftVehicle;
+extern const CarEntry kCableLaunchVehicle;
 
 extern const uint16_t kRideFilmLength[3];
 
@@ -646,6 +670,8 @@ constexpr RideTypeDescriptor kDummyRTD =
             { RatingsModifierType::NoModifier, 0, 0, 0, 0 },
         },
     },
+    .CatchCarParameters = {nullptr,0},
+    .AlternateTrackList = {0,{{0,0}}},
     .UpdateRotating = UpdateRotatingDefault,
     .LightFXAddLightsMagicVehicle = nullptr,
     .StartRideMusic = OpenRCT2::RideAudio::DefaultStartRideMusicChannel,

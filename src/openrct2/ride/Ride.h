@@ -484,6 +484,7 @@ enum
     RIDE_LIFECYCLE_FIXED_RATINGS = 1 << 20,        // When set, the ratings will not be updated (useful for hacked rides).
     RIDE_LIFECYCLE_RANDOM_SHOP_COLOURS = 1 << 21,
     RIDE_LIFECYCLE_REVERSED_TRAINS = 1 << 22,
+    RIDE_LIFECYCLE_CABLE_LAUNCH = 1 << 23,
 };
 
 // Constants used by the ride_type->flags property at 0x008
@@ -619,9 +620,12 @@ enum
     RIDE_TYPE_SINGLE_RAIL_ROLLER_COASTER,
     RIDE_TYPE_ALPINE_COASTER,
     RIDE_TYPE_CLASSIC_WOODEN_ROLLER_COASTER,
-    RIDE_TYPE_CLASSIC_STAND_UP_ROLLER_COASTER,
+    RIDE_TYPE_CLASSIC_STAND_UP_ROLLER_COASTER = 100,
     RIDE_TYPE_LSM_LAUNCHED_ROLLER_COASTER,
     RIDE_TYPE_CLASSIC_WOODEN_TWISTER_ROLLER_COASTER,
+    RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER,
+    RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_1,
+    RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_2,
 
     RIDE_TYPE_COUNT
 };
@@ -875,6 +879,7 @@ TileElement* RideGetStationExitElement(const CoordsXYZ& elementPos);
 money64 RideGetRefundPrice(const Ride& ride);
 int32_t RideGetRandomColourPresetIndex(ride_type_t rideType);
 money64 RideGetCommonPrice(const Ride& forRide);
+ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool applyVehicle, bool applyTrack);
 
 void RideClearForConstruction(Ride& ride);
 void InvalidateTestResults(Ride& ride);

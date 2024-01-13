@@ -151,6 +151,8 @@ enum class TrackGroup : uint8_t
 
     diagSlopeSteepLong,
     diveLoop,
+    cableLaunch,
+    magneticBrake,
 
     count,
 };
@@ -618,8 +620,13 @@ namespace OpenRCT2
 
         DiagDown25Brakes = 349,
 
-        Count = 350,
+        CableLaunch = 350,
+        MagneticBrakeFlat = 351,
+        MagneticBrakeDiagFlat = 352,
+        MagneticBrakeDown25 = 353,
+        MagneticBrakeDiagDown25 = 354,
 
+        Count = 355,
         None = 65535,
     };
 }

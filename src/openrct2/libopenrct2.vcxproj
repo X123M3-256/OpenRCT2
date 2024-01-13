@@ -429,6 +429,7 @@
     <ClInclude Include="rct2\T6Exporter.h" />
     <ClInclude Include="ReplayManager.h" />
     <ClInclude Include="ride\CableLift.h" />
+    <ClInclude Include="ride\CableLaunch.h" />
     <ClInclude Include="ride\CarEntry.h" />
     <ClInclude Include="ride\MazeCost.h" />
     <ClInclude Include="ride\Ride.h" />
@@ -947,6 +948,7 @@
     <ClCompile Include="paint\track\coaster\LatticeTriangleTrackAlt.cpp" />
     <ClCompile Include="paint\track\coaster\HeartlineTwisterCoaster.cpp" />
     <ClCompile Include="paint\track\coaster\HybridCoaster.cpp" />
+    <ClCompile Include="paint\track\coaster\HydraulicLaunchedRollerCoaster.cpp" />
     <ClCompile Include="paint\track\coaster\InvertedHairpinCoaster.cpp" />
     <ClCompile Include="paint\track\coaster\InvertedImpulseCoaster.cpp" />
     <ClCompile Include="paint\track\coaster\InvertedRollerCoaster.cpp" />
@@ -1057,6 +1059,7 @@
     <ClCompile Include="rct2\T6Importer.cpp" />
     <ClCompile Include="ReplayManager.cpp" />
     <ClCompile Include="ride\CableLift.cpp" />
+    <ClCompile Include="ride\CableLaunch.cpp" />
     <ClCompile Include="ride\CarEntry.cpp" />
     <ClCompile Include="ride\MazeCost.cpp" />
     <ClCompile Include="ride\Ride.cpp" />

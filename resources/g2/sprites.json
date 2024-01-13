@@ -319,6 +319,21 @@
         "path": "icons/peep_spawn.png"
     },
     {
+        "path": "icons/bi_rail_track.png",
+        "x": 5,
+        "y": 3
+    },
+    {
+        "path": "icons/tri_rail_track.png",
+        "x": 5,
+        "y": 3
+    },
+    {
+        "path": "icons/quad_rail_track.png",
+        "x": 5,
+        "y": 3
+    },
+    {
         "path": "icons/colour_invisible.png"
     },
     {

@@ -96,6 +96,7 @@ extern TrackRoll _currentTrackRollEnd;
 extern bool _currentTrackHasLiftHill;
 extern OpenRCT2::SelectedAlternative _currentTrackAlternative;
 extern OpenRCT2::TrackElemType _selectedTrackType;
+extern uint8_t _currentTrackType;
 
 extern TrackRoll _previousTrackRollEnd;
 extern TrackPitch _previousTrackPitchEnd;

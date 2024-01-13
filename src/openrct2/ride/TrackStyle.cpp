@@ -99,10 +99,10 @@ static constexpr TrackPaintFunctionGetter kPaintFunctionMap[] = {
     GetTrackPaintFunctionWaterRC,                  // waterCoaster
     GetTrackPaintFunctionWoodenRC,                 // woodenRollerCoaster
     GetTrackPaintFunctionWoodenWildMouse,          // woodenWildMouse
+    OpenRCT2::HydraulicLaunchedRC::GetTrackPaintFunction,
+    OpenRCT2::HydraulicLaunchedRC::GetTrackPaintFunctionAlt2,
+    OpenRCT2::HydraulicLaunchedRC::GetTrackPaintFunctionAlt1,
 
-    DummyGetter,
-    DummyGetter,
-    DummyGetter,
     DummyGetter,
     DummyGetter,
     DummyGetter,

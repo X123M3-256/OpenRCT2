@@ -3654,6 +3654,21 @@ namespace OpenRCT2::Ui::Windows
                     caption = STR_NUMBER_OF_ROTATIONS;
                     tooltip = STR_NUMBER_OF_ROTATIONS_TIP;
                     break;
+                case RideMode::continuousCircuit:
+                case RideMode::continuousCircuitBlockSectioned:
+                    // If the ride type supports cable launches, then show the powered launch speed setting when in continuous
+                    // circuit mode
+                    if (ride->getRideTypeDescriptor().SupportsTrackGroup(TrackGroup::cableLaunch))
+                    {
+                        ft.Rewind();
+                        ft.Increment(18);
+                        ft.Add<uint16_t>((ride->launchSpeed * 9) / 4);
+                        format = STR_RIDE_MODE_SPEED_VALUE;
+                        caption = STR_LAUNCH_SPEED;
+                        tooltip = STR_LAUNCH_SPEED_TIP;
+                        break;
+                    }
+                    [[fallthrough]];
                 default:
                     format = STR_MAX_PEOPLE_ON_RIDE_VALUE;
                     caption = STR_MAX_PEOPLE_ON_RIDE;
@@ -3707,7 +3722,10 @@ namespace OpenRCT2::Ui::Windows
             {
                 auto ft = Formatter();
                 ft.Add<uint16_t>(ride->numBlockBrakes + ride->numStations);
-                auto underWidget = ride->mode == RideMode::poweredLaunchBlockSectioned ? WIDX_MODE_TWEAK : WIDX_MODE;
+                auto underWidget = (ride->mode == RideMode::poweredLaunchBlockSectioned
+                                    || ride->getRideTypeDescriptor().SupportsTrackGroup(TrackGroup::cableLaunch))
+                    ? WIDX_MODE_TWEAK
+                    : WIDX_MODE;
                 DrawTextBasic(
                     rt, windowPos + ScreenCoordsXY{ 21, widgets[underWidget].bottom + 3 }, STR_BLOCK_SECTIONS, ft,
                     { COLOUR_BLACK });

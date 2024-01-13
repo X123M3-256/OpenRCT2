@@ -277,6 +277,30 @@ void TrackElement::SetBrakeBoosterSpeed(uint8_t speed)
     URide.BrakeBoosterSpeed = (speed >> 1);
 }
 
+bool TrackElement::GetCableLaunchIsBrakeSection() const
+{
+    return URide.BrakeBoosterSpeed & 0x10;
+}
+
+void TrackElement::SetCableLaunchIsBrakeSection(bool isBrake)
+{
+    if (isBrake)
+        URide.BrakeBoosterSpeed |= 0x10;
+    else
+        URide.BrakeBoosterSpeed &= ~0x10;
+}
+
+uint8_t TrackElement::GetCableLaunchFinState() const
+{
+    return URide.BrakeBoosterSpeed & 0xF;
+}
+
+void TrackElement::SetCableLaunchFinState(uint8_t speed)
+{
+    URide.BrakeBoosterSpeed &= ~0xF;
+    URide.BrakeBoosterSpeed |= speed & 0xF;
+}
+
 bool TrackElement::HasGreenLight() const
 {
     return (Flags2 & TRACK_ELEMENT_FLAGS2_HAS_GREEN_LIGHT) != 0;

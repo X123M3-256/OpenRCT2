@@ -39,6 +39,10 @@ namespace OpenRCT2
         TrackElemType::DiagDown25Brakes,
         TrackElemType::BlockBrakes,
         TrackElemType::DiagBlockBrakes,
+        TrackElemType::MagneticBrakeFlat,
+        TrackElemType::MagneticBrakeDiagFlat,
+        TrackElemType::MagneticBrakeDown25,
+        TrackElemType::MagneticBrakeDiagDown25,
 
         // Boosters
         TrackElemType::Booster,
@@ -54,6 +58,7 @@ namespace OpenRCT2
         TrackElemType::LeftCurvedLiftHill,
         TrackElemType::RightCurvedLiftHill,
         TrackElemType::CableLiftHill,
+        TrackElemType::CableLaunch,
         TrackElemType::PoweredLift,
         kSeparator,
 
@@ -217,7 +222,7 @@ namespace OpenRCT2
     };
 
     // Update the magic number with the current number of track elements to silence
-    static_assert(EnumValue(TrackElemType::Count) == 350, "Reminder to add new track element to special dropdown list");
+    static_assert(EnumValue(TrackElemType::Count) == 355, "Reminder to add new track element to special dropdown list");
 
     /**
      *
