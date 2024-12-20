@@ -3554,7 +3554,6 @@ static void RideCreateVehiclesFindFirstBlock(const Ride& ride, CoordsXYE* outXYE
                 }
                 [[fallthrough]];
             case TrackElemType::EndStation:
-            case TrackElemType::CableLiftHill:
             case TrackElemType::BlockBrakes:
                 *outXYElement = { trackPos, reinterpret_cast<TileElement*>(trackElement) };
                 return;
@@ -3666,6 +3665,19 @@ ResultWithMessage Ride::CreateVehicles(const CoordsXYE& element, bool isApplying
  */
 void Ride::MoveTrainsToBlockBrakes(const CoordsXYZ& firstBlockPosition, TrackElement& firstBlock)
 {
+    // If the ride has a cable lift, we don't want to fetch the cable lift element and the block preceding it
+    TrackElement* cableLiftTileElement = nullptr;
+    TrackElement* cableLiftPreviousBlock = nullptr;
+    if (lifecycle_flags & RIDE_LIFECYCLE_CABLE_LIFT_HILL_COMPONENT_USED)
+    {
+        cableLiftTileElement = MapGetTrackElementAt(CableLiftLoc);
+        if (cableLiftTileElement != nullptr)
+        {
+            CoordsXYZ location = CableLiftLoc;
+            cableLiftPreviousBlock = TrackGetPreviousBlock(location, reinterpret_cast<TileElement*>(cableLiftTileElement));
+        }
+    }
+
     for (int32_t i = 0; i < NumTrains; i++)
     {
         auto train = GetEntity<Vehicle>(vehicles[i]);
@@ -3695,6 +3707,14 @@ void Ride::MoveTrainsToBlockBrakes(const CoordsXYZ& firstBlockPosition, TrackEle
                 break;
             }
 
+            // Setting the first block before the cable lift to the same state as the cable lift ensures that any train which
+            // would be placed on the cable lift will instead stop on the block before it. As there can only be one cable lift
+            // per ride and there must always be at least one block left free, there will be enough blocks remaining. This fixes
+            // the bug in #21215
+            if (cableLiftTileElement != nullptr && cableLiftPreviousBlock != nullptr)
+            {
+                cableLiftPreviousBlock->SetBrakeClosed(cableLiftTileElement->IsBrakeClosed());
+            }
             firstBlock.SetBrakeClosed(true);
             for (Vehicle* car = train; car != nullptr; car = GetEntity<Vehicle>(car->next_vehicle_on_train))
             {
@@ -3722,6 +3742,30 @@ void Ride::MoveTrainsToBlockBrakes(const CoordsXYZ& firstBlockPosition, TrackEle
             }
         }
     }
+
+    // After all trains are in position, set the block preceding the cable lift to open
+    if (cableLiftPreviousBlock != nullptr)
+    {
+        cableLiftPreviousBlock->SetBrakeClosed(false);
+    }
+}
+
+static bool RideGetStationTile(const Ride& ride, CoordsXYE* output)
+{
+    for (const auto& station : ride.GetStations())
+    {
+        CoordsXYZ trackStart = station.GetStart();
+        if (trackStart.IsNull())
+            continue;
+
+        TileElement* tileElement = MapGetTrackElementAtOfType(trackStart, TrackElemType::EndStation);
+        if (tileElement == nullptr)
+            continue;
+
+        *output = { trackStart.x, trackStart.y, tileElement };
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -3731,100 +3775,73 @@ void Ride::MoveTrainsToBlockBrakes(const CoordsXYZ& firstBlockPosition, TrackEle
  */
 static ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool isApplying)
 {
-    CoordsXYZ location;
-    location.SetNull();
-    for (const auto& station : ride.GetStations())
-    {
-        location = station.GetStart();
-        if (!location.IsNull())
-            break;
-    }
-
-    if (location.IsNull())
-    {
+    // Despawn existing cable lift tiles
+    CoordsXYE stationTile;
+    if (!RideGetStationTile(ride, &stationTile))
         return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION };
+
+    if (isApplying)
+    {
+        TrackCircuitIterator it;
+        TrackCircuitIteratorBegin(&it, stationTile);
+        while (TrackCircuitIteratorNext(&it))
+        {
+            TileElement* tileElement = it.current.element;
+            GetTrackElementOriginAndApplyChanges(
+                { { it.current, tileElement->GetBaseZ() }, tileElement->GetDirection() },
+                tileElement->AsTrack()->GetTrackType(), 0, &tileElement, TRACK_ELEMENT_SET_HAS_CABLE_LIFT_FALSE);
+        }
+        // If circuit is incomplete, iterate backwards to clear all tiles connected to the station
+        if (!it.looped)
+        {
+            TrackCircuitIteratorBegin(&it, stationTile);
+            while (TrackCircuitIteratorPrevious(&it))
+            {
+                TileElement* tileElement = it.current.element;
+                GetTrackElementOriginAndApplyChanges(
+                    { { it.current, tileElement->GetBaseZ() }, tileElement->GetDirection() },
+                    tileElement->AsTrack()->GetTrackType(), 0, &tileElement, TRACK_ELEMENT_SET_HAS_CABLE_LIFT_FALSE);
+            }
+        }
     }
 
-    bool success = false;
-    TileElement* tileElement = MapGetFirstElementAt(location);
-    if (tileElement == nullptr)
+    // Spawn new cable lift tiles
+    auto cableLiftTileElement = MapGetTrackElementAt(ride.CableLiftLoc);
+    CoordsXYE cableLiftCoords = { ride.CableLiftLoc, reinterpret_cast<TileElement*>(cableLiftTileElement) };
+    if (cableLiftTileElement == nullptr)
         return { false };
-    do
-    {
-        if (tileElement->GetType() != TileElementType::Track)
-            continue;
-        if (tileElement->GetBaseZ() != location.z)
-            continue;
-
-        const auto& ted = GetTrackElementDescriptor(tileElement->AsTrack()->GetTrackType());
-        if (!(ted.sequences[0].flags & TRACK_SEQUENCE_FLAG_ORIGIN))
-        {
-            continue;
-        }
-        success = true;
-        break;
-    } while (!(tileElement++)->IsLastForTile());
-
-    if (!success)
-        return { false };
-
-    enum
-    {
-        STATE_FIND_CABLE_LIFT,
-        STATE_FIND_STATION,
-        STATE_REST_OF_TRACK
-    };
-    int32_t state = STATE_FIND_CABLE_LIFT;
 
     TrackCircuitIterator it;
-    TrackCircuitIteratorBegin(&it, { location, tileElement });
+    TrackCircuitIteratorBegin(&it, cableLiftCoords);
     while (TrackCircuitIteratorPrevious(&it))
     {
-        tileElement = it.current.element;
+        TileElement* tileElement = it.current.element;
         auto trackType = tileElement->AsTrack()->GetTrackType();
-
-        uint16_t flags = TRACK_ELEMENT_SET_HAS_CABLE_LIFT_FALSE;
-        switch (state)
+        switch (trackType)
         {
-            case STATE_FIND_CABLE_LIFT:
-                // Search for a cable lift hill track element
-                if (trackType == TrackElemType::CableLiftHill)
+            case TrackElemType::Up25:
+            case TrackElemType::Up60:
+            case TrackElemType::FlatToUp25:
+            case TrackElemType::Up25ToFlat:
+            case TrackElemType::Up25ToUp60:
+            case TrackElemType::Up60ToUp25:
+            case TrackElemType::FlatToUp60LongBase:
+            case TrackElemType::Flat:
+                if (isApplying)
                 {
-                    flags = TRACK_ELEMENT_SET_HAS_CABLE_LIFT_TRUE;
-                    state = STATE_FIND_STATION;
+                    GetTrackElementOriginAndApplyChanges(
+                        { { it.current, tileElement->GetBaseZ() }, tileElement->GetDirection() }, trackType, 0, &tileElement,
+                        TRACK_ELEMENT_SET_HAS_CABLE_LIFT_TRUE);
                 }
                 break;
-            case STATE_FIND_STATION:
-                // Search for the start of the hill
-                switch (trackType)
-                {
-                    case TrackElemType::Flat:
-                    case TrackElemType::Up25:
-                    case TrackElemType::Up60:
-                    case TrackElemType::FlatToUp25:
-                    case TrackElemType::Up25ToFlat:
-                    case TrackElemType::Up25ToUp60:
-                    case TrackElemType::Up60ToUp25:
-                    case TrackElemType::FlatToUp60LongBase:
-                        flags = TRACK_ELEMENT_SET_HAS_CABLE_LIFT_TRUE;
-                        break;
-                    case TrackElemType::EndStation:
-                        state = STATE_REST_OF_TRACK;
-                        break;
-                    default:
-                        return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION };
-                }
-                break;
-        }
-        if (isApplying)
-        {
-            auto tmpLoc = CoordsXYZ{ it.current, tileElement->GetBaseZ() };
-            auto direction = tileElement->GetDirection();
-            trackType = tileElement->AsTrack()->GetTrackType();
-            GetTrackElementOriginAndApplyChanges({ tmpLoc, direction }, trackType, 0, &tileElement, flags);
+            case TrackElemType::EndStation:
+            case TrackElemType::BlockBrakes:
+                return { true };
+            default:
+                return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION };
         }
     }
-    return { true };
+    return { false, STR_CABLE_LIFT_HILL_MUST_START_IMMEDIATELY_AFTER_STATION };
 }
 
 /**
