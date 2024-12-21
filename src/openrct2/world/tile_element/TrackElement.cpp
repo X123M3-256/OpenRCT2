@@ -269,12 +269,55 @@ void TrackElement::SetIsIndestructible(bool isIndestructible)
 
 uint8_t TrackElement::GetBrakeBoosterSpeed() const
 {
-    return URide.BrakeBoosterSpeed << 1;
+    return (URide.BrakeBoosterSpeed & 0x3F) << 1;
 }
 
 void TrackElement::SetBrakeBoosterSpeed(uint8_t speed)
 {
-    URide.BrakeBoosterSpeed = (speed >> 1);
+    URide.BrakeBoosterSpeed &= ~0x3F;
+    URide.BrakeBoosterSpeed |= (speed >> 1);
+}
+
+uint8_t TrackElement::GetBrakeBoosterMode() const
+{
+    return (URide.BrakeBoosterSpeed & 0xC0) >> 6;
+}
+
+void TrackElement::SetBrakeBoosterMode(uint8_t speed)
+{
+    URide.BrakeBoosterSpeed &= ~0xC0;
+    URide.BrakeBoosterSpeed |= (speed & 0x3) << 6;
+}
+
+bool TrackElement::IsDeferredBlock() const
+{
+    switch (GetTrackType())
+    {
+        case TrackElemType::EndStation:
+        case TrackElemType::BlockBrakes:
+        case TrackElemType::DiagBlockBrakes:
+            return GetBrakeBoosterMode() == BRAKE_DEFERRED;
+        default:
+            return false;
+    }
+}
+
+bool TrackElement::ShouldClearDeferredBlock() const
+{
+    if (!IsBlockStart())
+    {
+        return HasGreenLight();
+    }
+    return false;
+}
+
+void TrackElement::SetShouldClearDeferredBlock(bool clear)
+{
+    if (!IsBlockStart())
+    {
+        // SetHighlight(clear);
+        SetHasGreenLight(clear);
+    }
 }
 
 bool TrackElement::HasGreenLight() const

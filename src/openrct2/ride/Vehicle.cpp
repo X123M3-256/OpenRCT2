@@ -5453,7 +5453,7 @@ void Vehicle::ApplyNonStopBlockBrake()
             velocity = kBlockBrakeBaseSpeed;
             acceleration = 0;
         }
-        else if (velocity > (brake_speed << 16) + kBlockBrakeSpeedOffset)
+        else if (velocity > ((brake_speed & 0x3F) << 16) + kBlockBrakeSpeedOffset)
         {
             velocity -= velocity >> 4;
             acceleration = 0;
@@ -5643,6 +5643,33 @@ static void BlockBrakesOpenPreviousSection(const Ride& ride, const CoordsXYZ& ve
         OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeClose, location);
         BlockBrakeSetLinkedBrakesClosed(location, *trackElement, false);
     }
+}
+
+static void BlockBrakesCloseDeferredBlock(const Ride& ride, const CoordsXYZ& vehicleTrackLocation, TileElement* tileElement)
+{
+    CoordsXYZ location = vehicleTrackLocation;
+    TrackElement* trackElement = TrackGetPreviousBlock(location, tileElement);
+    if (trackElement == nullptr)
+        return;
+
+    // Close preceding block
+    SetBrakeClosedMultiTile(*trackElement, location, true);
+    MapInvalidateElement(location, reinterpret_cast<TileElement*>(trackElement));
+
+    auto trackType = trackElement->GetTrackType();
+    // TODO why do we only check powered flag when releasing the brake? Understand what's going on with the sounds
+    if ((TrackTypeIsBlockBrakes(trackType)
+         || trackType == TrackElemType::EndStation)) // && !(rideEntry.Cars[0].flags & CAR_ENTRY_FLAG_POWERED))
+    {
+        OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeRelease, location);
+    }
+    if (trackType != TrackElemType::EndStation && TrackTypeIsBlockBrakes(trackType))
+    {
+        BlockBrakeSetLinkedBrakesClosed(location, *trackElement, true);
+    }
+
+    // Open block before that
+    BlockBrakesOpenPreviousSection(ride, location, reinterpret_cast<TileElement*>(trackElement));
 }
 
 int32_t Vehicle::GetSwingAmount() const
@@ -6842,16 +6869,16 @@ void Vehicle::Sub6DBF3E()
 uint8_t Vehicle::ChooseBrakeSpeed() const
 {
     if (!TrackTypeIsBrakes(GetTrackType()))
-        return brake_speed;
+        return brake_speed & 0x3F;
     auto trackElement = MapGetTrackElementAtOfTypeSeq(TrackLocation, GetTrackType(), 0);
     if (trackElement != nullptr)
     {
         if (trackElement->AsTrack()->IsBrakeClosed())
-            return brake_speed;
+            return brake_speed & 0x3F;
         else
-            return std::max<uint8_t>(brake_speed, BlockBrakeSpeed);
+            return std::max<uint8_t>(brake_speed & 0x3F, BlockBrakeSpeed);
     }
-    return brake_speed;
+    return brake_speed & 0x3F;
 }
 
 /**
@@ -6860,7 +6887,8 @@ uint8_t Vehicle::ChooseBrakeSpeed() const
 void Vehicle::PopulateBrakeSpeed(const CoordsXYZ& vehicleTrackLocation, TrackElement& brake)
 {
     auto trackSpeed = brake.GetBrakeBoosterSpeed();
-    brake_speed = trackSpeed;
+    auto trackMode = brake.GetBrakeBoosterMode();
+    brake_speed = trackSpeed | (trackMode << 6);
     if (!TrackTypeIsBrakes(brake.GetTrackType()))
     {
         BlockBrakeSpeed = trackSpeed;
@@ -6915,19 +6943,26 @@ bool Vehicle::UpdateTrackMotionForwardsGetNewTrack(
     {
         if (next_vehicle_on_train.IsNull())
         {
-            SetBrakeClosedMultiTile(*tileElement->AsTrack(), TrackLocation, true);
-            if (TrackTypeIsBlockBrakes(trackType) || trackType == TrackElemType::EndStation)
+            if (!tileElement->AsTrack()->IsDeferredBlock())
             {
-                if (!(rideEntry.Cars[0].flags & CAR_ENTRY_FLAG_POWERED))
+                SetBrakeClosedMultiTile(*tileElement->AsTrack(), TrackLocation, true);
+                if (TrackTypeIsBlockBrakes(trackType) || trackType == TrackElemType::EndStation)
                 {
-                    OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeRelease, TrackLocation);
+                    if (!(rideEntry.Cars[0].flags & CAR_ENTRY_FLAG_POWERED))
+                    {
+                        OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeRelease, TrackLocation);
+                    }
+                }
+                MapInvalidateElement(TrackLocation, tileElement);
+                BlockBrakesOpenPreviousSection(curRide, TrackLocation, tileElement);
+                if (TrackTypeIsBlockBrakes(trackType))
+                {
+                    BlockBrakeSetLinkedBrakesClosed(TrackLocation, *tileElement->AsTrack(), true);
                 }
             }
-            MapInvalidateElement(TrackLocation, tileElement);
-            BlockBrakesOpenPreviousSection(curRide, TrackLocation, tileElement);
-            if (TrackTypeIsBlockBrakes(trackType))
+            else
             {
-                BlockBrakeSetLinkedBrakesClosed(TrackLocation, *tileElement->AsTrack(), true);
+                SetFlag(VehicleFlags::PassedDeferredBlock);
             }
         }
     }
@@ -7124,7 +7159,7 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
         }
         else if (TrackTypeIsBooster(trackType))
         {
-            auto boosterSpeed = GetBoosterSpeed(curRide.type, (brake_speed << 16));
+            auto boosterSpeed = GetBoosterSpeed(curRide.type, ((brake_speed & 0x3F) << 16));
             if (boosterSpeed > _vehicleVelocityF64E08)
             {
                 acceleration = GetRideTypeDescriptor(curRide.type).LegacyBoosterSettings.BoosterAcceleration
@@ -7307,6 +7342,17 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
         if (remaining_distance < 0x368A)
         {
             return true;
+        }
+
+        // Clear deferred block when passing trigger point
+        if (HasFlag(VehicleFlags::PassedDeferredBlock))
+        {
+            TileElement* tileElement = MapGetTrackElementAtOfTypeSeq(TrackLocation, trackType, 0);
+            if (tileElement->AsTrack()->ShouldClearDeferredBlock())
+            {
+                BlockBrakesCloseDeferredBlock(curRide, TrackLocation, tileElement);
+                ClearFlag(VehicleFlags::PassedDeferredBlock);
+            }
         }
 
         acceleration += AccelerationFromPitch[moveInfovehicleAnimationGroup];
@@ -7507,12 +7553,25 @@ bool Vehicle::UpdateTrackMotionBackwards(const CarEntry* carEntry, const Ride& c
             }
         }
 
-        if (trackType == TrackElemType::Booster)
+        if (TrackTypeIsBooster(trackType))
         {
-            auto boosterSpeed = GetBoosterSpeed(curRide.type, (brake_speed << 16));
-            if (boosterSpeed < _vehicleVelocityF64E08)
+            auto mode = brake_speed >> 6;
+            if (mode == BOOSTER_BRAKE)
             {
-                acceleration = GetRideTypeDescriptor(curRide.type).LegacyBoosterSettings.BoosterAcceleration << 16;
+                if (_vehicleVelocityF64E08 > -650000)
+                    acceleration -= 175000 + 3 * _vehicleVelocityF64E08 / 2;
+                else
+                {
+                    acceleration += 800000;
+                }
+            }
+            else if (mode == BOOSTER_BIDIRECTIONAL)
+            {
+                auto boosterSpeed = GetBoosterSpeed(curRide.type, ((brake_speed & 0x3F) << 16));
+                if (boosterSpeed > -_vehicleVelocityF64E08)
+                {
+                    acceleration = -GetRideTypeDescriptor(curRide.type).LegacyBoosterSettings.BoosterAcceleration << 16;
+                }
             }
         }
 

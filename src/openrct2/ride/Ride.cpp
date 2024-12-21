@@ -3768,6 +3768,90 @@ static bool RideGetStationTile(const Ride& ride, CoordsXYE* output)
     return false;
 }
 
+static void RideInitialiseDeferredBlocks(const Ride& ride)
+{
+    CoordsXYE trackStart;
+    if (!RideGetStationTile(ride, &trackStart))
+        return;
+
+    // Set deferred blocks
+    TrackElement* lastBlock = trackStart.element->AsTrack()->IsBlockStart() ? trackStart.element->AsTrack() : nullptr;
+    TrackCircuitIterator it;
+    TrackCircuitIteratorBegin(&it, trackStart);
+    while (TrackCircuitIteratorNext(&it))
+    {
+        TrackElement* tileElement = it.current.element->AsTrack();
+        OpenRCT2::TrackElemType trackType = tileElement->GetTrackType();
+
+        // Clear any flags that might have been set previously as the layout may have changed
+        if (tileElement->IsDeferredBlock())
+        {
+            tileElement->SetBrakeBoosterMode(BRAKE_NORMAL);
+            tileElement->SetHighlight(false);
+        }
+
+        // Set blocks to deferred if there is a booster directly after
+        if (tileElement->IsBlockStart())
+        {
+            printf("Found block\n");
+            lastBlock = tileElement;
+        }
+        else if (trackType == TrackElemType::Booster || trackType == TrackElemType::DiagBooster)
+        {
+            if (lastBlock != nullptr)
+            {
+                lastBlock->SetBrakeBoosterMode(BRAKE_DEFERRED);
+                // lastBlock->SetHighlight(true);
+                tileElement->SetBrakeBoosterMode(BOOSTER_BRAKE);
+                // tileElement->SetHighlight(true);
+            }
+        }
+        else
+            lastBlock = nullptr;
+    }
+
+    // Initialise trigger points
+    TrackElement* highestTrackElement = trackStart.element->AsTrack();
+    int maxZ = -1;
+    int maxSlope = 0;
+    bool searching = trackStart.element->AsTrack()->IsDeferredBlock();
+
+    TrackCircuitIteratorBegin(&it, trackStart);
+    while (TrackCircuitIteratorNext(&it))
+    {
+        TrackElement* tileElement = it.current.element->AsTrack();
+        // Clear any flags that might have been set previously as the layout may have changed
+        tileElement->SetShouldClearDeferredBlock(false);
+
+        int z = tileElement->GetBaseZ();
+        int flags = GetTrackElementDescriptor(tileElement->GetTrackType()).flags;
+        int slope = (flags & TRACK_ELEM_FLAG_UP) ? 1 : ((flags & TRACK_ELEM_FLAG_DOWN) ? -1 : 0);
+
+        if (searching)
+        {
+            // Upon reaching the next block, stop searching and set the trigger point to the highest element found
+            if (tileElement->IsBlockStart() || tileElement->HasChain())
+            {
+                searching = false;
+                highestTrackElement->SetShouldClearDeferredBlock(true);
+            }
+            else if (z > maxZ || (z == maxZ && slope < maxSlope))
+            {
+                maxZ = z;
+                maxSlope = slope;
+                highestTrackElement = tileElement;
+            }
+        }
+        // Upon encountering a deferred block, begin searching for the highest track element in the next block
+        if (tileElement->IsDeferredBlock())
+        {
+            maxZ = -1;
+            searching = true;
+            continue;
+        }
+    }
+}
+
 /**
  * Checks and initialises the cable lift track returns false if unable to find
  * appropriate track.
@@ -5981,6 +6065,11 @@ ResultWithMessage Ride::ChangeStatusCreateVehicles(bool isApplying, const Coords
         RideSetStartFinishPoints(id, trackElement);
 
     const auto& rtd = GetRideTypeDescriptor();
+    if (rtd.HasFlag(RtdFlag::hasTrack) && isApplying)
+    {
+        RideInitialiseDeferredBlocks(*this);
+    }
+
     if (!rtd.HasFlag(RtdFlag::noVehicles) && !(lifecycle_flags & RIDE_LIFECYCLE_ON_TRACK))
     {
         const auto createVehicleResult = CreateVehicles(trackElement, isApplying);

@@ -48,6 +48,21 @@ enum
     LANDSCAPE_DOOR_OPEN = 3,
 };
 
+// Brake modes
+enum
+{
+    BRAKE_NORMAL = 0,
+    BRAKE_DEFERRED = 1,
+};
+
+// Booster modes
+enum
+{
+    BOOSTER_NORMAL = 0,
+    BOOSTER_BRAKE = 1,
+    BOOSTER_BIDIRECTIONAL = 2,
+};
+
 #pragma pack(push, 1)
 
 struct TrackElement : TileElementBase
@@ -118,6 +133,13 @@ public:
 
     uint8_t GetBrakeBoosterSpeed() const;
     void SetBrakeBoosterSpeed(uint8_t speed);
+
+    uint8_t GetBrakeBoosterMode() const;
+    void SetBrakeBoosterMode(uint8_t mode);
+
+    bool IsDeferredBlock() const;
+    bool ShouldClearDeferredBlock() const;
+    void SetShouldClearDeferredBlock(bool clear);
 
     bool HasGreenLight() const;
     void SetHasGreenLight(bool on);

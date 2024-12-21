@@ -460,10 +460,11 @@ namespace OpenRCT2::VehicleFlags
     constexpr uint32_t ReverseInclineCompletedLap = (1 << 12); // Set when the vehicle travels backwards through the station for
                                                                // the first time
     constexpr uint32_t SpinningIsLocked = (1 << 13);           // After passing a rotation toggle track piece this will enable
-    constexpr uint32_t MoveSingleCar = (1 << 14); // OpenRCT2 Flag: Used to override UpdateMotion to move the position of
-                                                  // an individual car on a train
-    constexpr uint32_t Crashed = (1 << 15);       // Car displays as smoke plume
-    constexpr uint32_t CarIsReversed = (1 << 16); // Car is displayed running backwards
+    constexpr uint32_t MoveSingleCar = (1 << 14);       // OpenRCT2 Flag: Used to override UpdateMotion to move the position of
+                                                        // an individual car on a train
+    constexpr uint32_t Crashed = (1 << 15);             // Car displays as smoke plume
+    constexpr uint32_t CarIsReversed = (1 << 16);       // Car is displayed running backwards
+    constexpr uint32_t PassedDeferredBlock = (1 << 17); // Vehicle has passed a block which has not yet been cleared
 } // namespace OpenRCT2::VehicleFlags
 
 enum
