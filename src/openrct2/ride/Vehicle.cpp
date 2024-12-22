@@ -5588,6 +5588,9 @@ void Vehicle::CheckAndApplyBlockSectionStopSite()
                 }
             }
             break;
+        case TrackElemType::BlockBooster:
+            if (curRide->IsBlockSectioned() && trackElement->AsTrack()->IsBrakeClosed())
+                ApplyStopBlockBrake();
         default:
             break;
     }
@@ -5638,7 +5641,7 @@ static void BlockBrakesOpenPreviousSection(const Ride& ride, const CoordsXYZ& ve
     {
         OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeClose, location);
     }
-    else if (TrackTypeIsBlockBrakes(trackType))
+    else if (TrackTypeIsBlockBrakes(trackType) || trackType == TrackElemType::BlockBooster)
     {
         OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeClose, location);
         BlockBrakeSetLinkedBrakesClosed(location, *trackElement, false);
@@ -5663,7 +5666,8 @@ static void BlockBrakesCloseDeferredBlock(const Ride& ride, const CoordsXYZ& veh
     {
         OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BlockBrakeRelease, location);
     }
-    if (trackType != TrackElemType::EndStation && TrackTypeIsBlockBrakes(trackType))
+    if (trackType != TrackElemType::EndStation
+        && (TrackTypeIsBlockBrakes(trackType) || trackType == TrackElemType::BlockBooster))
     {
         BlockBrakeSetLinkedBrakesClosed(location, *trackElement, true);
     }
@@ -6955,7 +6959,7 @@ bool Vehicle::UpdateTrackMotionForwardsGetNewTrack(
                 }
                 MapInvalidateElement(TrackLocation, tileElement);
                 BlockBrakesOpenPreviousSection(curRide, TrackLocation, tileElement);
-                if (TrackTypeIsBlockBrakes(trackType))
+                if (TrackTypeIsBlockBrakes(trackType) || trackType == TrackElemType::BlockBooster)
                 {
                     BlockBrakeSetLinkedBrakesClosed(TrackLocation, *tileElement->AsTrack(), true);
                 }
@@ -7160,7 +7164,17 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
         else if (TrackTypeIsBooster(trackType))
         {
             auto boosterSpeed = GetBoosterSpeed(curRide.type, ((brake_speed & 0x3F) << 16));
-            if (boosterSpeed > _vehicleVelocityF64E08)
+            auto trackElement = MapGetTrackElementAtOfTypeSeq(TrackLocation, GetTrackType(), 0);
+            if (trackElement != nullptr && trackElement->AsTrack()->IsBrakeClosed())
+            {
+                if (_vehicleVelocityF64E08 < 650000)
+                    acceleration += 175000 - 3 * _vehicleVelocityF64E08 / 2;
+                else
+                {
+                    acceleration -= 800000;
+                }
+            }
+            else if (boosterSpeed > _vehicleVelocityF64E08)
             {
                 acceleration = GetRideTypeDescriptor(curRide.type).LegacyBoosterSettings.BoosterAcceleration
                     << 16; //_vehicleVelocityF64E08 * 1.2;

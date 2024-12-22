@@ -45,6 +45,7 @@ bool TrackElement::IsBlockStart() const
         case TrackElemType::CableLiftHill:
         case TrackElemType::BlockBrakes:
         case TrackElemType::DiagBlockBrakes:
+        case TrackElemType::BlockBooster:
             return true;
         case TrackElemType::Up25ToFlat:
         case TrackElemType::Up60ToFlat:
@@ -297,6 +298,8 @@ bool TrackElement::IsDeferredBlock() const
         case TrackElemType::BlockBrakes:
         case TrackElemType::DiagBlockBrakes:
             return GetBrakeBoosterMode() == BRAKE_DEFERRED;
+        case TrackElemType::BlockBooster:
+            return true;
         default:
             return false;
     }

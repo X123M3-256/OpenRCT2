@@ -265,6 +265,7 @@ TRACK_PAINT_FUNCTION GetTrackPaintFunctionLatticeTriangleTrackAlt(TrackElemType 
         case TrackElemType::BlockBrakes:
             return LatticeTriangleTrackAltBlockBrakes;
         case TrackElemType::Booster:
+        case TrackElemType::BlockBooster:
             return LatticeTriangleTrackAltBooster;
         case TrackElemType::PoweredLift:
             return LatticeTriangleTrackAltPoweredLift;

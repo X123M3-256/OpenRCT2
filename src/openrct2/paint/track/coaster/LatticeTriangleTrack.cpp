@@ -18714,6 +18714,7 @@ TRACK_PAINT_FUNCTION GetTrackPaintFunctionLatticeTriangleTrack(OpenRCT2::TrackEl
         case TrackElemType::RightBankedDown25ToFlat:
             return LatticeTriangleTrackRightBanked25DegDownToFlat;
         case TrackElemType::Booster:
+        case TrackElemType::BlockBooster:
             return LatticeTriangleTrackBooster;
         case TrackElemType::PoweredLift:
             return LatticeTriangleTrackPoweredLift;

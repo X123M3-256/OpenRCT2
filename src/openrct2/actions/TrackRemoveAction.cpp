@@ -464,6 +464,7 @@ GameActions::Result TrackRemoveAction::Execute() const
                 break;
             case TrackElemType::BlockBrakes:
             case TrackElemType::DiagBlockBrakes:
+            case TrackElemType::BlockBooster:
                 ride->num_block_brakes--;
                 if (ride->num_block_brakes == 0)
                 {

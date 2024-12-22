@@ -3071,6 +3071,7 @@ static void RideOpenBlockBrakes(const CoordsXYE& startElement)
         {
             case TrackElemType::BlockBrakes:
             case TrackElemType::DiagBlockBrakes:
+            case TrackElemType::BlockBooster:
                 BlockBrakeSetLinkedBrakesClosed(
                     CoordsXYZ(currentElement.x, currentElement.y, currentElement.element->GetBaseZ()),
                     *currentElement.element->AsTrack(), false);
@@ -3126,6 +3127,10 @@ void BlockBrakeSetLinkedBrakesClosed(const CoordsXYZ& vehicleTrackLocation, Trac
                 *tileElement->AsTrack(), { trackBeginEnd.begin_x, trackBeginEnd.begin_y },
                 (tileElement->AsTrack()->GetBrakeBoosterSpeed() >= brakeSpeed) || isClosed);
         }
+        else if (TrackTypeIsBooster(tileElement->AsTrack()->GetTrackType()))
+        {
+            SetBrakeClosedMultiTile(*tileElement->AsTrack(), { trackBeginEnd.begin_x, trackBeginEnd.begin_y }, isClosed);
+        }
 
         // prevent infinite loop
         counter = !counter;
@@ -3142,7 +3147,8 @@ void BlockBrakeSetLinkedBrakesClosed(const CoordsXYZ& vehicleTrackLocation, Trac
                 return;
             }
         }
-    } while (TrackTypeIsBrakes(trackBeginEnd.begin_element->AsTrack()->GetTrackType()));
+    } while (TrackTypeIsBrakes(trackBeginEnd.begin_element->AsTrack()->GetTrackType())
+             || TrackTypeIsBooster(tileElement->AsTrack()->GetTrackType()));
 }
 
 /**
@@ -3786,14 +3792,13 @@ static void RideInitialiseDeferredBlocks(const Ride& ride)
         // Clear any flags that might have been set previously as the layout may have changed
         if (tileElement->IsDeferredBlock())
         {
-            tileElement->SetBrakeBoosterMode(BRAKE_NORMAL);
-            tileElement->SetHighlight(false);
+            tileElement->SetBrakeBoosterMode(
+                BRAKE_NORMAL); // Note, this will set block booster which does not need to be marked with flag
         }
 
         // Set blocks to deferred if there is a booster directly after
         if (tileElement->IsBlockStart())
         {
-            printf("Found block\n");
             lastBlock = tileElement;
         }
         else if (trackType == TrackElemType::Booster || trackType == TrackElemType::DiagBooster)
