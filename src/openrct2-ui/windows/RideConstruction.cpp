@@ -29,6 +29,7 @@
 #include <openrct2/actions/RideSetStatusAction.h>
 #include <openrct2/actions/TrackPlaceAction.h>
 #include <openrct2/actions/TrackRemoveAction.h>
+#include <openrct2/actions/TrackSetBrakeModeAction.h>
 #include <openrct2/actions/TrackSetBrakeSpeedAction.h>
 #include <openrct2/audio/audio.h>
 #include <openrct2/config/Config.h>
@@ -127,6 +128,7 @@ namespace OpenRCT2::Ui::Windows
         WIDX_SEAT_ROTATION_ANGLE_SPINNER_UP,
         WIDX_SEAT_ROTATION_ANGLE_SPINNER_DOWN,
         WIDX_SIMULATE,
+        WIDX_BOOSTER_BIDIRECTIONAL,
         WIDX_SPEED_GROUPBOX = WIDX_BANKING_GROUPBOX,
         WIDX_SPEED_SETTING_SPINNER = WIDX_BANK_LEFT,
         WIDX_SPEED_SETTING_SPINNER_UP = WIDX_BANK_STRAIGHT,
@@ -176,6 +178,7 @@ namespace OpenRCT2::Ui::Windows
         MakeWidget        ({118, 120}, {     89,  41}, WindowWidgetType::Groupbox, WindowColour::Primary  , STR_RIDE_CONSTRUCTION_SEAT_ROT                                                                        ),
         MakeSpinnerWidgets({123, 138}, {     58,  12}, WindowWidgetType::Spinner,  WindowColour::Secondary, 0,                                                STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP),
         MakeWidget        ({161, 338}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_SIMULATE),                         STR_SIMULATE_RIDE_TIP                               ),
+        MakeWidget        ({105, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, SPR_G2_BOOSTER_BIDIRECTIONAL,                     STR_SIMULATE_RIDE_TIP                               ),
         kWidgetsEnd,
     };
     // clang-format on
@@ -245,6 +248,7 @@ namespace OpenRCT2::Ui::Windows
 
             _currentTrackPrice = kMoney64Undefined;
             _currentBrakeSpeed = 8;
+            _currentBrakeMode = 0;
             _currentSeatRotationAngle = 4;
 
             _currentlySelectedTrack = currentRide->GetRideTypeDescriptor().StartTrackPiece;
@@ -1448,6 +1452,17 @@ namespace OpenRCT2::Ui::Windows
                         }
                     }
                     break;
+                case WIDX_BOOSTER_BIDIRECTIONAL:
+                    if (_currentBrakeMode != BOOSTER_BIDIRECTIONAL)
+                        _currentBrakeMode = BOOSTER_BIDIRECTIONAL;
+                    else
+                        _currentBrakeMode = BOOSTER_NORMAL;
+                    if (_rideConstructionState == RideConstructionState::Selected)
+                    {
+                        SetBrakeMode(_currentBrakeMode);
+                    }
+                    WindowRideConstructionUpdateActiveElements();
+                    break;
             }
         }
 
@@ -1918,6 +1933,7 @@ namespace OpenRCT2::Ui::Windows
             widgets[WIDX_BANK_RIGHT].type = WindowWidgetType::Empty;
             widgets[WIDX_U_TRACK].type = WindowWidgetType::Empty;
             widgets[WIDX_O_TRACK].type = WindowWidgetType::Empty;
+            widgets[WIDX_BOOSTER_BIDIRECTIONAL].type = WindowWidgetType::Empty;
 
             bool trackHasSpeedSetting = TrackTypeHasSpeedSetting(_selectedTrackType)
                 || TrackTypeHasSpeedSetting(_currentlySelectedTrack.trackType);
@@ -1956,6 +1972,7 @@ namespace OpenRCT2::Ui::Windows
                     widgets[WIDX_SPEED_SETTING_SPINNER].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_SPEED_SETTING_SPINNER_UP].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_SPEED_SETTING_SPINNER_DOWN].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
+                    widgets[WIDX_BOOSTER_BIDIRECTIONAL].type = WindowWidgetType::FlatBtn;
                 }
 
                 _currentlyShowingBrakeOrBoosterSpeed = true;
@@ -2030,6 +2047,14 @@ namespace OpenRCT2::Ui::Windows
             {
                 widgets[WIDX_PREVIOUS_SECTION].type = WindowWidgetType::FlatBtn;
                 widgets[WIDX_NEXT_SECTION].type = WindowWidgetType::FlatBtn;
+            }
+
+            if (boosterTrackSelected)
+            {
+                if (_currentBrakeMode == BOOSTER_BIDIRECTIONAL)
+                {
+                    pressedWidgets |= (1ULL << WIDX_BOOSTER_BIDIRECTIONAL);
+                }
             }
 
             switch (_rideConstructionState)
@@ -2511,6 +2536,26 @@ namespace OpenRCT2::Ui::Windows
                     WindowRideConstructionUpdateActiveElements();
                 });
                 GameActions::Execute(&trackSetBrakeSpeed);
+                return;
+            }
+            WindowRideConstructionUpdateActiveElements();
+        }
+
+        void SetBrakeMode(int32_t brakesMode)
+        {
+            TileElement* tileElement;
+
+            if (GetTrackElementOriginAndApplyChanges(
+                    { _currentTrackBegin, static_cast<Direction>(_currentTrackPieceDirection & 3) }, _currentTrackPieceType, 0,
+                    &tileElement, 0)
+                != std::nullopt)
+            {
+                auto trackSetBrakeMode = TrackSetBrakeModeAction(
+                    _currentTrackBegin, tileElement->AsTrack()->GetTrackType(), brakesMode);
+                trackSetBrakeMode.SetCallback([](const GameAction* ga, const GameActions::Result* result) {
+                    WindowRideConstructionUpdateActiveElements();
+                });
+                GameActions::Execute(&trackSetBrakeMode);
                 return;
             }
             WindowRideConstructionUpdateActiveElements();
@@ -3084,7 +3129,10 @@ namespace OpenRCT2::Ui::Windows
             {
                 _selectedTrackType = tileElement->AsTrack()->GetTrackType();
                 if (TrackTypeHasSpeedSetting(tileElement->AsTrack()->GetTrackType()))
+                {
                     _currentBrakeSpeed = tileElement->AsTrack()->GetBrakeBoosterSpeed();
+                    _currentBrakeMode = tileElement->AsTrack()->GetBrakeBoosterMode();
+                }
                 _currentSeatRotationAngle = tileElement->AsTrack()->GetSeatRotation();
             }
         }

@@ -209,6 +209,13 @@ GameActions::Result TileModifyAction::QueryExecute(bool isExecuting) const
             res = TileInspector::TrackSetIndestructible(_loc, elementIndex, isIndestructible, isExecuting);
             break;
         }
+        case TileModifyType::TrackSetIsDeferredBlock:
+        {
+            const auto elementIndex = _value1;
+            const bool shouldClearDeferredBlock = _value2;
+            res = TileInspector::TrackSetIsDeferredBlock(_loc, elementIndex, true, shouldClearDeferredBlock, isExecuting);
+            break;
+        }
         case TileModifyType::ScenerySetQuarterLocation:
         {
             const auto elementIndex = _value1;

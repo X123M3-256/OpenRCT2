@@ -78,6 +78,7 @@ TrackPitch _previousTrackPitchEnd;
 CoordsXYZ _previousTrackPiece;
 
 uint8_t _currentBrakeSpeed;
+uint8_t _currentBrakeMode;
 uint8_t _currentSeatRotationAngle;
 
 CoordsXYZD _unkF440C5;
@@ -462,6 +463,18 @@ std::optional<CoordsXYZ> GetTrackElementOriginAndApplyChanges(
         if (flags & TRACK_ELEMENT_SET_BRAKE_BOOSTER_SPEED)
         {
             trackElement->SetBrakeBoosterSpeed(static_cast<uint8_t>(extra_params & 0xFF));
+        }
+        if (flags & TRACK_ELEMENT_SET_BRAKE_BOOSTER_MODE)
+        {
+            trackElement->SetBrakeBoosterMode(static_cast<uint8_t>(extra_params & 0xFF));
+        }
+        if (flags & TRACK_ELEMENT_SET_DEFERRED_BLOCK_TRUE)
+        {
+            trackElement->SetIsDeferredBlock(true);
+        }
+        if (flags & TRACK_ELEMENT_SET_DEFERRED_BLOCK_FALSE)
+        {
+            trackElement->SetIsDeferredBlock(false);
         }
     }
     return retCoordsXYZ;

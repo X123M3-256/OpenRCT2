@@ -138,6 +138,7 @@ namespace OpenRCT2::Ui::Windows
         WIDX_TRACK_CHECK_CHAIN_LIFT,
         WIDX_TRACK_CHECK_BRAKE_CLOSED,
         WIDX_TRACK_CHECK_IS_INDESTRUCTIBLE,
+        WIDX_TRACK_CLEAR_DEFERRED_BLOCK,
 
         // Scenery
         WIDX_SCENERY_SPINNER_HEIGHT = PAGE_WIDGETS,
@@ -326,7 +327,7 @@ namespace OpenRCT2::Ui::Windows
         kWidgetsEnd,
     };
 
-    constexpr int32_t NumTrackProperties = 5;
+    constexpr int32_t NumTrackProperties = 6;
     constexpr int32_t NumTrackDetails = 7;
     constexpr int32_t TrackPropertiesHeight = 16 + NumTrackProperties * 21;
     constexpr int32_t TrackDetailsHeight = 20 + NumTrackDetails * 11;
@@ -337,6 +338,7 @@ namespace OpenRCT2::Ui::Windows
         MakeWidget(PropertyRowCol({ 12, 0}, 2, 0), PropertyFullWidth, WindowWidgetType::Checkbox, WindowColour::Secondary, STR_TILE_INSPECTOR_TRACK_CHAIN_LIFT), // WIDX_TRACK_CHECK_CHAIN_LIFT
         MakeWidget(PropertyRowCol({ 12, 0}, 3, 0), PropertyFullWidth, WindowWidgetType::Checkbox, WindowColour::Secondary, STR_TILE_INSPECTOR_TRACK_BRAKE_CLOSED), // WIDX_TRACK_CHECK_BRAKE_CLOSED
         MakeWidget(PropertyRowCol({ 12, 0}, 4, 0), PropertyFullWidth, WindowWidgetType::Checkbox, WindowColour::Secondary, STR_TILE_INSPECTOR_TRACK_IS_INDESTRUCTIBLE), // WIDX_TRACK_CHECK_IS_INDESTRUCTIBLE
+        MakeWidget(PropertyRowCol({ 12, 0}, 4, 0), PropertyFullWidth, WindowWidgetType::Checkbox, WindowColour::Secondary, STR_TILE_INSPECTOR_TRACK_CLEAR_PREVIOUS_BLOCK), // WIDX_TRACK_CHECK_CLEAR_DEFERRED_BLOCK
         kWidgetsEnd,
     };
 
@@ -671,6 +673,13 @@ static uint64_t PageDisabledWidgets[] = {
                         case WIDX_TRACK_CHECK_IS_INDESTRUCTIBLE:
                             TrackSetIndestructible(
                                 windowTileInspectorSelectedIndex, !tileElement->AsTrack()->IsIndestructible());
+                            break;
+
+                        case WIDX_TRACK_CLEAR_DEFERRED_BLOCK:
+                            TrackSetIsDeferredBlock(
+                                windowTileInspectorSelectedIndex,
+                                !(tileElement->AsTrack()->IsDeferredBlock()
+                                  || tileElement->AsTrack()->IsDeferredBlockTrigger()));
                             break;
                     } // switch widget index
                     break;
@@ -2014,6 +2023,12 @@ static uint64_t PageDisabledWidgets[] = {
             GameActions::Execute(&modifyTile);
         }
 
+        void TrackSetIsDeferredBlock(int32_t elementIndex, bool shouldClear)
+        {
+            auto modifyTile = TileModifyAction(_toolMap, TileModifyType::TrackSetIsDeferredBlock, elementIndex, shouldClear);
+            GameActions::Execute(&modifyTile);
+        }
+
         void QuarterTileSet(int32_t elementIndex, const int32_t quarterIndex)
         {
             // quarterIndex is widget index relative to WIDX_SCENERY_CHECK_QUARTER_N, so a value from 0-3
@@ -2262,6 +2277,8 @@ static uint64_t PageDisabledWidgets[] = {
                     widgets[WIDX_TRACK_CHECK_BRAKE_CLOSED].bottom = GBBB(propertiesAnchor, 3);
                     widgets[WIDX_TRACK_CHECK_IS_INDESTRUCTIBLE].top = GBBT(propertiesAnchor, 4);
                     widgets[WIDX_TRACK_CHECK_IS_INDESTRUCTIBLE].bottom = GBBB(propertiesAnchor, 4);
+                    widgets[WIDX_TRACK_CLEAR_DEFERRED_BLOCK].top = GBBT(propertiesAnchor, 5);
+                    widgets[WIDX_TRACK_CLEAR_DEFERRED_BLOCK].bottom = GBBB(propertiesAnchor, 5);
                     SetCheckboxValue(WIDX_TRACK_CHECK_APPLY_TO_ALL, _applyToAll);
                     SetCheckboxValue(WIDX_TRACK_CHECK_CHAIN_LIFT, tileElement->AsTrack()->HasChain());
                     SetCheckboxValue(WIDX_TRACK_CHECK_BRAKE_CLOSED, tileElement->AsTrack()->IsBrakeClosed());
@@ -2269,6 +2286,9 @@ static uint64_t PageDisabledWidgets[] = {
                         ? STR_TILE_INSPECTOR_TRACK_BLOCK_BRAKE
                         : STR_TILE_INSPECTOR_TRACK_BRAKE_CLOSED;
                     SetCheckboxValue(WIDX_TRACK_CHECK_IS_INDESTRUCTIBLE, tileElement->AsTrack()->IsIndestructible());
+                    SetCheckboxValue(
+                        WIDX_TRACK_CLEAR_DEFERRED_BLOCK,
+                        tileElement->AsTrack()->IsDeferredBlock() || tileElement->AsTrack()->IsDeferredBlockTrigger());
                     break;
 
                 case TileElementType::SmallScenery:

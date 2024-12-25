@@ -888,6 +888,22 @@ namespace OpenRCT2::TileInspector
         return GameActions::Result();
     }
 
+    GameActions::Result TrackSetShouldClearDeferredBlock(
+        const CoordsXY& loc, int32_t elementIndex, bool shouldClearDeferredBlock, bool isExecuting)
+    {
+        TileElement* const trackElement = MapGetNthElementAt(loc, elementIndex);
+        if (trackElement == nullptr || trackElement->GetType() != TileElementType::Track)
+            return GameActions::Result(
+                GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_TRACK_ELEMENT_NOT_FOUND);
+
+        if (isExecuting)
+        {
+            trackElement->AsTrack()->SetShouldClearDeferredBlock(shouldClearDeferredBlock);
+        }
+
+        return GameActions::Result();
+    }
+
     GameActions::Result ScenerySetQuarterLocation(
         const CoordsXY& loc, int32_t elementIndex, int32_t quarterIndex, bool isExecuting)
     {
