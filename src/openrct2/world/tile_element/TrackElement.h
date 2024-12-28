@@ -30,6 +30,7 @@ enum
     TRACK_ELEMENT_FLAGS2_HAS_GREEN_LIGHT = 1 << 4,
     TRACK_ELEMENT_FLAGS2_BRAKE_CLOSED = 1 << 5,
     TRACK_ELEMENT_FLAGS2_INDESTRUCTIBLE_TRACK_PIECE = 1 << 6,
+    TRACK_ELEMENT_FLAGS2_DEFERRED_BLOCK = 1 << 7,
 };
 
 enum
@@ -48,19 +49,22 @@ enum
     LANDSCAPE_DOOR_OPEN = 3,
 };
 
-// Brake modes
-enum
-{
-    BRAKE_NORMAL = 0,
-    BRAKE_DEFERRED = 1,
-};
-
 // Booster modes
 enum
 {
     BOOSTER_NORMAL = 0,
     BOOSTER_BRAKE = 1,
-    BOOSTER_BIDIRECTIONAL = 2,
+    BOOSTER_REVERSE = 2,
+    BOOSTER_BIDIRECTIONAL = 3,
+};
+
+// Block modes
+enum
+{
+    BLOCK_NORMAL = 0,
+    BLOCK_STOP = 1,
+    BLOCK_REVERSE = 2,
+    BLOCK_STOP_AND_REVERSE = 3,
 };
 
 #pragma pack(push, 1)
@@ -138,8 +142,8 @@ public:
     void SetBrakeBoosterMode(uint8_t mode);
 
     bool IsDeferredBlock() const;
-    bool ShouldClearDeferredBlock() const;
-    void SetShouldClearDeferredBlock(bool clear);
+    bool IsDeferredBlockTrigger() const;
+    void SetIsDeferredBlock(bool isDeferred);
 
     bool HasGreenLight() const;
     void SetHasGreenLight(bool on);

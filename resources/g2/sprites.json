@@ -328,6 +328,21 @@
         "path": "icons/folder.png"
     },
     {
+        "path": "icons/booster_bidirectional.png",
+        "x": 2,
+        "y": 2
+    },
+    {
+        "path": "icons/brake_stop.png",
+        "x": 2,
+        "y": 2
+    },
+    {
+        "path": "icons/brake_reverse.png",
+        "x": 2,
+        "y": 2
+    },
+    {
         "path": "loader/loader_hybrid_supports.png",
         "y": 10
     },

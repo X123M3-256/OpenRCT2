@@ -85,6 +85,7 @@
 #include "TrackDesignAction.h"
 #include "TrackPlaceAction.h"
 #include "TrackRemoveAction.h"
+#include "TrackSetBrakeModeAction.h"
 #include "TrackSetBrakeSpeedAction.h"
 #include "WallPlaceAction.h"
 #include "WallRemoveAction.h"
@@ -201,6 +202,7 @@ namespace OpenRCT2::GameActions
         REGISTER_ACTION(TrackPlaceAction);
         REGISTER_ACTION(TrackRemoveAction);
         REGISTER_ACTION(TrackSetBrakeSpeedAction);
+        REGISTER_ACTION(TrackSetBrakeModeAction);
         REGISTER_ACTION(ClearAction);
         REGISTER_ACTION(PauseToggleAction);
         REGISTER_ACTION(LoadOrQuitAction);

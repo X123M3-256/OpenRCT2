@@ -129,6 +129,7 @@ namespace OpenRCT2::Ui::Windows
         WIDX_SEAT_ROTATION_ANGLE_SPINNER_DOWN,
         WIDX_SIMULATE,
         WIDX_BOOSTER_BIDIRECTIONAL,
+        WIDX_BOOSTER_BRAKE,
         WIDX_SPEED_GROUPBOX = WIDX_BANKING_GROUPBOX,
         WIDX_SPEED_SETTING_SPINNER = WIDX_BANK_LEFT,
         WIDX_SPEED_SETTING_SPINNER_UP = WIDX_BANK_STRAIGHT,
@@ -178,7 +179,8 @@ namespace OpenRCT2::Ui::Windows
         MakeWidget        ({118, 120}, {     89,  41}, WindowWidgetType::Groupbox, WindowColour::Primary  , STR_RIDE_CONSTRUCTION_SEAT_ROT                                                                        ),
         MakeSpinnerWidgets({123, 138}, {     58,  12}, WindowWidgetType::Spinner,  WindowColour::Secondary, 0,                                                STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP),
         MakeWidget        ({161, 338}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_SIMULATE),                         STR_SIMULATE_RIDE_TIP                               ),
-        MakeWidget        ({105, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, SPR_G2_BOOSTER_BIDIRECTIONAL,                     STR_SIMULATE_RIDE_TIP                               ),
+        MakeWidget        ({105, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_BOOSTER_BIDIRECTIONAL),            STR_SIMULATE_RIDE_TIP                               ),
+        MakeWidget        ({131, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_BLOCK_STOP),                       STR_SIMULATE_RIDE_TIP                               ),
         kWidgetsEnd,
     };
     // clang-format on
@@ -1453,10 +1455,77 @@ namespace OpenRCT2::Ui::Windows
                     }
                     break;
                 case WIDX_BOOSTER_BIDIRECTIONAL:
-                    if (_currentBrakeMode != BOOSTER_BIDIRECTIONAL)
-                        _currentBrakeMode = BOOSTER_BIDIRECTIONAL;
+                    if (_selectedTrackType == TrackElemType::BlockBooster)
+                    {
+                        switch (_currentBrakeMode)
+                        {
+                            case BLOCK_NORMAL:
+                                _currentBrakeMode = BLOCK_REVERSE;
+                                break;
+                            case BLOCK_STOP:
+                                _currentBrakeMode = BLOCK_STOP_AND_REVERSE;
+                                break;
+                            case BLOCK_REVERSE:
+                                _currentBrakeMode = BLOCK_NORMAL;
+                                break;
+                            case BLOCK_STOP_AND_REVERSE:
+                                _currentBrakeMode = BLOCK_STOP;
+                                break;
+                        }
+                    }
                     else
-                        _currentBrakeMode = BOOSTER_NORMAL;
+                    {
+                        switch (_currentBrakeMode)
+                        {
+                            case BOOSTER_NORMAL:
+                            case BOOSTER_BRAKE:
+                            case BOOSTER_REVERSE:
+                                _currentBrakeMode = BOOSTER_BIDIRECTIONAL;
+                                break;
+                            case BOOSTER_BIDIRECTIONAL:
+                                _currentBrakeMode = BOOSTER_NORMAL;
+                                break;
+                        }
+                    }
+                    if (_rideConstructionState == RideConstructionState::Selected)
+                    {
+                        SetBrakeMode(_currentBrakeMode);
+                    }
+                    WindowRideConstructionUpdateActiveElements();
+                    break;
+                case WIDX_BOOSTER_BRAKE:
+                    if (_selectedTrackType == TrackElemType::BlockBooster)
+                    {
+                        switch (_currentBrakeMode)
+                        {
+                            case BLOCK_NORMAL:
+                                _currentBrakeMode = BLOCK_STOP;
+                                break;
+                            case BLOCK_STOP:
+                                _currentBrakeMode = BLOCK_NORMAL;
+                                break;
+                            case BLOCK_REVERSE:
+                                _currentBrakeMode = BLOCK_STOP_AND_REVERSE;
+                                break;
+                            case BLOCK_STOP_AND_REVERSE:
+                                _currentBrakeMode = BLOCK_REVERSE;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (_currentBrakeMode)
+                        {
+                            case BOOSTER_NORMAL:
+                            case BOOSTER_BIDIRECTIONAL:
+                            case BOOSTER_REVERSE:
+                                _currentBrakeMode = BOOSTER_BRAKE;
+                                break;
+                            case BOOSTER_BRAKE:
+                                _currentBrakeMode = BOOSTER_NORMAL;
+                                break;
+                        }
+                    }
                     if (_rideConstructionState == RideConstructionState::Selected)
                     {
                         SetBrakeMode(_currentBrakeMode);
@@ -1934,6 +2003,7 @@ namespace OpenRCT2::Ui::Windows
             widgets[WIDX_U_TRACK].type = WindowWidgetType::Empty;
             widgets[WIDX_O_TRACK].type = WindowWidgetType::Empty;
             widgets[WIDX_BOOSTER_BIDIRECTIONAL].type = WindowWidgetType::Empty;
+            widgets[WIDX_BOOSTER_BRAKE].type = WindowWidgetType::Empty;
 
             bool trackHasSpeedSetting = TrackTypeHasSpeedSetting(_selectedTrackType)
                 || TrackTypeHasSpeedSetting(_currentlySelectedTrack.trackType);
@@ -1946,7 +2016,6 @@ namespace OpenRCT2::Ui::Windows
                 || _currentlySelectedTrack.trackType > TrackElemType::HighestAlias;
 
             bool rideHasSeatRotation = rtd.HasFlag(RtdFlag::hasSeatRotation);
-
             if (!trackHasSpeedSetting)
             {
                 if (IsTrackEnabled(TrackGroup::flatRollBanking))
@@ -1973,6 +2042,18 @@ namespace OpenRCT2::Ui::Windows
                     widgets[WIDX_SPEED_SETTING_SPINNER_UP].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_SPEED_SETTING_SPINNER_DOWN].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_BOOSTER_BIDIRECTIONAL].type = WindowWidgetType::FlatBtn;
+                    widgets[WIDX_BOOSTER_BRAKE].type = WindowWidgetType::FlatBtn;
+                    if (_selectedTrackType != TrackElemType::BlockBooster
+                        && _currentlySelectedTrack.trackType != TrackElemType::BlockBooster)
+                    {
+                        printf("Not a block\n");
+                        widgets[WIDX_BOOSTER_BIDIRECTIONAL].image = ImageId(SPR_G2_BOOSTER_BIDIRECTIONAL);
+                    }
+                    else
+                    {
+                        printf("Block\n");
+                        widgets[WIDX_BOOSTER_BIDIRECTIONAL].image = ImageId(SPR_G2_BLOCK_REVERSE);
+                    }
                 }
 
                 _currentlyShowingBrakeOrBoosterSpeed = true;
@@ -2051,9 +2132,38 @@ namespace OpenRCT2::Ui::Windows
 
             if (boosterTrackSelected)
             {
-                if (_currentBrakeMode == BOOSTER_BIDIRECTIONAL)
+                if (_selectedTrackType == TrackElemType::BlockBooster)
                 {
-                    pressedWidgets |= (1ULL << WIDX_BOOSTER_BIDIRECTIONAL);
+                    switch (_currentBrakeMode)
+                    {
+                        case BLOCK_NORMAL:
+                            break;
+                        case BLOCK_STOP:
+                            pressedWidgets |= (1ULL << WIDX_BOOSTER_BRAKE);
+                            break;
+                        case BLOCK_REVERSE:
+                            pressedWidgets |= (1ULL << WIDX_BOOSTER_BIDIRECTIONAL);
+                            break;
+                        case BLOCK_STOP_AND_REVERSE:
+                            pressedWidgets |= (1ULL << WIDX_BOOSTER_BRAKE);
+                            pressedWidgets |= (1ULL << WIDX_BOOSTER_BIDIRECTIONAL);
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (_currentBrakeMode)
+                    {
+                        case BOOSTER_REVERSE:
+                        case BOOSTER_NORMAL:
+                            break;
+                        case BOOSTER_BRAKE:
+                            pressedWidgets |= (1ULL << WIDX_BOOSTER_BRAKE);
+                            break;
+                        case BOOSTER_BIDIRECTIONAL:
+                            pressedWidgets |= (1ULL << WIDX_BOOSTER_BIDIRECTIONAL);
+                            break;
+                    }
                 }
             }
 
@@ -5040,7 +5150,7 @@ namespace OpenRCT2::Ui::Windows
 
         if (TrackTypeHasSpeedSetting(trackType))
         {
-            properties = _currentBrakeSpeed;
+            properties = _currentBrakeSpeed | (_currentBrakeMode << 6); // TODO only set mode for pieces that have one
         }
         else
         {

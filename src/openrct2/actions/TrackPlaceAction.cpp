@@ -113,7 +113,7 @@ GameActions::Result TrackPlaceAction::Query() const
             GameActions::Status::InvalidParameters, STR_RIDE_CONSTRUCTION_CANT_CONSTRUCT_THIS_HERE, STR_ERR_VALUE_OUT_OF_RANGE);
     }
 
-    if (_brakeSpeed > kMaximumTrackSpeed)
+    if ((_brakeSpeed & 0x3F) > kMaximumTrackSpeed)
     {
         LOG_WARNING("Invalid speed for track placement, speed = %d", _brakeSpeed);
         return GameActions::Result(
@@ -614,7 +614,8 @@ GameActions::Result TrackPlaceAction::Execute() const
         }
         if (TrackTypeHasSpeedSetting(_trackType))
         {
-            trackElement->SetBrakeBoosterSpeed(_brakeSpeed);
+            trackElement->SetBrakeBoosterSpeed(_brakeSpeed & 0x3F);
+            trackElement->SetBrakeBoosterMode(_brakeSpeed >> 6); // TODO revist this, maybe only set for pieces that have a mode
         }
 
         if (rtd.HasFlag(RtdFlag::hasLandscapeDoors))

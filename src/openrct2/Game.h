@@ -48,6 +48,7 @@ enum class GameCommand : int32_t
     RaiseWater,
     LowerWater,
     SetBrakesSpeed,
+    SetBrakesMode,
     HireNewStaffMember,
     SetStaffPatrol,
     FireStaffMember,

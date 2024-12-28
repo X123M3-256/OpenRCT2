@@ -1427,6 +1427,7 @@ const static EnumMap<GameCommand> ActionNameToType = {
     { "trackplace", GameCommand::PlaceTrack },
     { "trackremove", GameCommand::RemoveTrack },
     { "tracksetbrakespeed", GameCommand::SetBrakesSpeed },
+    { "tracksetbrakesmode", GameCommand::SetBrakesMode },
     { "wallplace", GameCommand::PlaceWall },
     { "wallremove", GameCommand::RemoveWall },
     { "wallsetcolour", GameCommand::SetWallColour },
