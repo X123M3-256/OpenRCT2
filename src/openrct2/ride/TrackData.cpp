@@ -4700,7 +4700,7 @@ namespace OpenRCT2::TrackMetaData
         STR_BLOCK_BRAKES,                  // TrackElemType::DiagBlockBrakes
         STR_BRAKES,                        // TrackElemType::Down25Brakes
         STR_BOOSTER,                       // TrackElemType::DiagBooster
-        STR_BOOSTER,                       // TrackElemType::BlockBooster
+        STR_BLOCK_BOOSTER,                 // TrackElemType::BlockBooster
     };
     static_assert(std::size(RideConfigurationStringIds) == EnumValue(TrackElemType::Count));
 

@@ -292,35 +292,31 @@ void TrackElement::SetBrakeBoosterMode(uint8_t speed)
 
 bool TrackElement::IsDeferredBlock() const
 {
-    switch (GetTrackType())
+    if (IsBlockStart())
     {
-        case TrackElemType::EndStation:
-        case TrackElemType::BlockBrakes:
-        case TrackElemType::DiagBlockBrakes:
-            return GetBrakeBoosterMode() == BRAKE_DEFERRED;
-        case TrackElemType::BlockBooster:
-            return true;
-        default:
-            return false;
+        return (Flags2 & TRACK_ELEMENT_FLAGS2_DEFERRED_BLOCK) != 0;
     }
+    else
+        return false;
 }
 
-bool TrackElement::ShouldClearDeferredBlock() const
+bool TrackElement::IsDeferredBlockTrigger() const
 {
     if (!IsBlockStart())
     {
-        return HasGreenLight();
+        return (Flags2 & TRACK_ELEMENT_FLAGS2_DEFERRED_BLOCK) != 0;
     }
     return false;
 }
 
-void TrackElement::SetShouldClearDeferredBlock(bool clear)
+void TrackElement::SetIsDeferredBlock(bool isDeferred)
 {
-    if (!IsBlockStart())
+    Flags2 &= ~TRACK_ELEMENT_FLAGS2_DEFERRED_BLOCK;
+    if (isDeferred)
     {
-        // SetHighlight(clear);
-        SetHasGreenLight(clear);
+        Flags2 |= TRACK_ELEMENT_FLAGS2_DEFERRED_BLOCK;
     }
+    // SetHighlight(isDeferred);
 }
 
 bool TrackElement::HasGreenLight() const

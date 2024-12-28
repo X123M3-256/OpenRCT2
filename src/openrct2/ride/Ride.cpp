@@ -3127,10 +3127,6 @@ void BlockBrakeSetLinkedBrakesClosed(const CoordsXYZ& vehicleTrackLocation, Trac
                 *tileElement->AsTrack(), { trackBeginEnd.begin_x, trackBeginEnd.begin_y },
                 (tileElement->AsTrack()->GetBrakeBoosterSpeed() >= brakeSpeed) || isClosed);
         }
-        else if (TrackTypeIsBooster(tileElement->AsTrack()->GetTrackType()))
-        {
-            SetBrakeClosedMultiTile(*tileElement->AsTrack(), { trackBeginEnd.begin_x, trackBeginEnd.begin_y }, isClosed);
-        }
 
         // prevent infinite loop
         counter = !counter;
@@ -3147,8 +3143,7 @@ void BlockBrakeSetLinkedBrakesClosed(const CoordsXYZ& vehicleTrackLocation, Trac
                 return;
             }
         }
-    } while (TrackTypeIsBrakes(trackBeginEnd.begin_element->AsTrack()->GetTrackType())
-             || TrackTypeIsBooster(tileElement->AsTrack()->GetTrackType()));
+    } while (TrackTypeIsBrakes(trackBeginEnd.begin_element->AsTrack()->GetTrackType()));
 }
 
 /**
@@ -3780,80 +3775,75 @@ static void RideInitialiseDeferredBlocks(const Ride& ride)
     if (!RideGetStationTile(ride, &trackStart))
         return;
 
-    // Set deferred blocks
-    TrackElement* lastBlock = trackStart.element->AsTrack()->IsBlockStart() ? trackStart.element->AsTrack() : nullptr;
+    // Initialise trigger points
     TrackCircuitIterator it;
-    TrackCircuitIteratorBegin(&it, trackStart);
-    while (TrackCircuitIteratorNext(&it))
+    CoordsXYE highestTrackElement = trackStart;
+    CoordsXYE lastBlock = trackStart;
+    CoordsXYE previousTrackElement = trackStart;
+    int maxZ = trackStart.element->GetBaseZ();
+    int maxSlope = 0;
+    bool searching = false;
+    // TODO I think this condition should always be true since we start on a station
+    if (trackStart.element->AsTrack()->GetTrackType() == TrackElemType::EndStation
+        || trackStart.element->AsTrack()->GetTrackType() == TrackElemType::BlockBooster)
     {
-        TrackElement* tileElement = it.current.element->AsTrack();
-        OpenRCT2::TrackElemType trackType = tileElement->GetTrackType();
-
-        // Clear any flags that might have been set previously as the layout may have changed
-        if (tileElement->IsDeferredBlock())
-        {
-            tileElement->SetBrakeBoosterMode(
-                BRAKE_NORMAL); // Note, this will set block booster which does not need to be marked with flag
-        }
-
-        // Set blocks to deferred if there is a booster directly after
-        if (tileElement->IsBlockStart())
-        {
-            lastBlock = tileElement;
-        }
-        else if (trackType == TrackElemType::Booster || trackType == TrackElemType::DiagBooster)
-        {
-            if (lastBlock != nullptr)
-            {
-                lastBlock->SetBrakeBoosterMode(BRAKE_DEFERRED);
-                // lastBlock->SetHighlight(true);
-                tileElement->SetBrakeBoosterMode(BOOSTER_BRAKE);
-                // tileElement->SetHighlight(true);
-            }
-        }
-        else
-            lastBlock = nullptr;
+        searching = true;
     }
 
-    // Initialise trigger points
-    TrackElement* highestTrackElement = trackStart.element->AsTrack();
-    int maxZ = -1;
-    int maxSlope = 0;
-    bool searching = trackStart.element->AsTrack()->IsDeferredBlock();
-
     TrackCircuitIteratorBegin(&it, trackStart);
     while (TrackCircuitIteratorNext(&it))
     {
         TrackElement* tileElement = it.current.element->AsTrack();
-        // Clear any flags that might have been set previously as the layout may have changed
-        tileElement->SetShouldClearDeferredBlock(false);
 
         int z = tileElement->GetBaseZ();
         int flags = GetTrackElementDescriptor(tileElement->GetTrackType()).flags;
         int slope = (flags & TRACK_ELEM_FLAG_UP) ? 1 : ((flags & TRACK_ELEM_FLAG_DOWN) ? -1 : 0);
+
+        // Clear any existing flags
+        GetTrackElementOriginAndApplyChanges(
+            { { it.current, it.current.element->GetBaseZ() }, it.current.element->GetDirection() },
+            it.current.element->AsTrack()->GetTrackType(), 0, nullptr, TRACK_ELEMENT_SET_DEFERRED_BLOCK_FALSE);
 
         if (searching)
         {
             // Upon reaching the next block, stop searching and set the trigger point to the highest element found
             if (tileElement->IsBlockStart() || tileElement->HasChain())
             {
+                printf("End\n");
                 searching = false;
-                highestTrackElement->SetShouldClearDeferredBlock(true);
+                if (highestTrackElement.element != lastBlock.element)
+                {
+                    GetTrackElementOriginAndApplyChanges(
+                        { { highestTrackElement, highestTrackElement.element->GetBaseZ() },
+                          highestTrackElement.element->GetDirection() },
+                        highestTrackElement.element->AsTrack()->GetTrackType(), 0, nullptr,
+                        TRACK_ELEMENT_SET_DEFERRED_BLOCK_TRUE);
+                    GetTrackElementOriginAndApplyChanges(
+                        { { lastBlock, lastBlock.element->GetBaseZ() }, lastBlock.element->GetDirection() },
+                        lastBlock.element->AsTrack()->GetTrackType(), 0, nullptr, TRACK_ELEMENT_SET_DEFERRED_BLOCK_TRUE);
+                }
             }
             else if (z > maxZ || (z == maxZ && slope < maxSlope))
             {
+                printf("Set\n");
                 maxZ = z;
                 maxSlope = slope;
-                highestTrackElement = tileElement;
+                highestTrackElement = previousTrackElement;
             }
         }
         // Upon encountering a deferred block, begin searching for the highest track element in the next block
-        if (tileElement->IsDeferredBlock())
+        if (tileElement->GetTrackType() == TrackElemType::BlockBooster
+            || tileElement->GetTrackType() == TrackElemType::EndStation)
         {
-            maxZ = -1;
+            printf("Start\n");
+            highestTrackElement = it.current;
+            lastBlock = it.current;
+            maxZ = z;
+            maxSlope = slope;
             searching = true;
             continue;
         }
+        previousTrackElement = it.current;
     }
 }
 

@@ -5542,6 +5542,8 @@ void Vehicle::CheckAndApplyBlockSectionStopSite()
         return;
     }
 
+    uint8_t mode = trackElement->AsTrack()->GetBrakeBoosterMode();
+
     switch (trackType)
     {
         case TrackElemType::BlockBrakes:
@@ -5589,8 +5591,54 @@ void Vehicle::CheckAndApplyBlockSectionStopSite()
             }
             break;
         case TrackElemType::BlockBooster:
-            if (curRide->IsBlockSectioned() && trackElement->AsTrack()->IsBrakeClosed())
-                ApplyStopBlockBrake();
+            if ((curRide->IsBlockSectioned() && (trackElement->AsTrack()->IsBrakeClosed()))
+                || HasFlag(VehicleFlags::StoppingAtBlock))
+            {
+                if (track_progress >= 8)
+                    _vehicleMotionTrackFlags |= VEHICLE_UPDATE_MOTION_TRACK_FLAG_VEHICLE_AT_BLOCK_BRAKE;
+                if (velocity > 650000)
+                {
+                    acceleration -= 32768;
+                }
+                else if (velocity < -650000)
+                {
+                    acceleration += 32768;
+                }
+                // Attempt to slow down to 2 mph
+                else if (velocity < -2.0_mph || velocity > 2.0_mph)
+                {
+                    velocity -= velocity >> 3;
+                    acceleration = 0;
+                }
+                // Once moving at 2mph or less, wait until train reaches stop point
+                if (velocity >= -2.0_mph && velocity <= 2.0_mph
+                    && ((velocity < 0 && track_progress <= 8) || (velocity > 0 && track_progress >= 8)))
+                {
+                    velocity = 0;
+                    acceleration = 0;
+                    // If this block is set to stop and wait, do that
+                    if (IsHead() && !HasFlag(VehicleFlags::StoppedOnHoldingBrake)
+                        && (mode == BLOCK_STOP || mode == BLOCK_STOP_AND_REVERSE))
+                    {
+                        SetFlag(VehicleFlags::StoppedOnHoldingBrake);
+                        vertical_drop_countdown = 90;
+                    }
+                }
+            }
+
+            if (velocity == 0 && (!curRide->IsBlockSectioned() || !trackElement->AsTrack()->IsBrakeClosed()))
+            {
+                if (TrainHead() == this && HasFlag(VehicleFlags::StoppingAtBlock))
+                {
+                    ClearFlag(VehicleFlags::StoppingAtBlock);
+                }
+
+                if (trackElement->AsTrack()->IsDeferredBlock())
+                    SetFlag(VehicleFlags::PassedDeferredBlock);
+
+                velocity = (mode == BLOCK_REVERSE || mode == BLOCK_STOP_AND_REVERSE) ? -2.0_mph : 2.0_mph;
+            }
+            break;
         default:
             break;
     }
@@ -6959,14 +7007,44 @@ bool Vehicle::UpdateTrackMotionForwardsGetNewTrack(
                 }
                 MapInvalidateElement(TrackLocation, tileElement);
                 BlockBrakesOpenPreviousSection(curRide, TrackLocation, tileElement);
-                if (TrackTypeIsBlockBrakes(trackType) || trackType == TrackElemType::BlockBooster)
+                if (TrackTypeIsBlockBrakes(trackType))
                 {
                     BlockBrakeSetLinkedBrakesClosed(TrackLocation, *tileElement->AsTrack(), true);
                 }
             }
             else
+            { // TODO does this work can we set it here?
+              // SetFlag(VehicleFlags::PassedDeferredBlock);
+            }
+        }
+
+        // PassedDeferredBlock flag should be set when the train is between a deferred block and its trigger point
+        if (TrainHead() == this && tileElement->AsTrack()->IsDeferredBlock())
+        {
+            printf("Set passed\n");
+            SetFlag(VehicleFlags::PassedDeferredBlock);
+        }
+    }
+
+    // Clear deferred block when passing trigger point
+    if (next_vehicle_on_train.IsNull())
+    {
+        Vehicle* head = TrainHead();
+        if (head != nullptr && tileElement->AsTrack()->IsDeferredBlockTrigger())
+        {
+            if (head->HasFlag(VehicleFlags::PassedDeferredBlock))
             {
-                SetFlag(VehicleFlags::PassedDeferredBlock);
+                BlockBrakesCloseDeferredBlock(curRide, TrackLocation, tileElement);
+                printf("Clear passed at trigger\n");
+                head->ClearFlag(VehicleFlags::PassedDeferredBlock);
+            }
+            else
+            {
+                // If we pass forwards over a trigger point and the PassedDeferredBlock flag is not set, that means that we
+                // previously passed backwards over this
+                //  trigger point and the flag was cleared. Upon passing back over it, we reset it to its previous state.
+                printf("Reset passed at trigger\n");
+                head->SetFlag(VehicleFlags::PassedDeferredBlock);
             }
         }
     }
@@ -7028,6 +7106,33 @@ bool Vehicle::UpdateTrackMotionForwardsGetNewTrack(
             {
                 velocity = 0;
             }
+        }
+
+        // If this is the first booster piece in a launch run, check if there is a closed block booster ahead
+        if (!TrackTypeIsBooster(trackType) && TrackTypeIsBooster(tileElement->AsTrack()->GetTrackType()) && TrainHead() == this)
+        {
+            CoordsXYE output = CoordsXYE(location.x, location.y, tileElement);
+            int32_t outputZ = location.z;
+            uint16_t timeoutCount = 256;
+            do
+            {
+                if (output.element->AsTrack()->GetTrackType() == TrackElemType::BlockBooster)
+                {
+                    uint8_t mode = output.element->AsTrack()->GetBrakeBoosterMode();
+                    if (!HasFlag(VehicleFlags::PassedDeferredBlock)
+                        && (output.element->AsTrack()->IsBrakeClosed() || mode == BLOCK_STOP || mode == BLOCK_STOP_AND_REVERSE))
+
+                    {
+                        SetFlag(VehicleFlags::StoppingAtBlock);
+                    }
+                    break;
+                }
+                if (!TrackTypeIsBooster(output.element->AsTrack()->GetTrackType()))
+                {
+                    break;
+                }
+                timeoutCount--;
+            } while (TrackBlockGetNext(&output, &output, &outputZ, nullptr) && timeoutCount);
         }
 
         if (PitchAndRollStart(HasFlag(VehicleFlags::CarIsInverted), tileElement) != pitchAndRollEnd)
@@ -7164,8 +7269,9 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
         else if (TrackTypeIsBooster(trackType))
         {
             auto boosterSpeed = GetBoosterSpeed(curRide.type, ((brake_speed & 0x3F) << 16));
-            auto trackElement = MapGetTrackElementAtOfTypeSeq(TrackLocation, GetTrackType(), 0);
-            if (trackElement != nullptr && trackElement->AsTrack()->IsBrakeClosed())
+            Vehicle* head = TrainHead();
+            bool isStopping = head != nullptr && head->HasFlag(VehicleFlags::StoppingAtBlock);
+            if (isStopping)
             {
                 if (_vehicleVelocityF64E08 < 650000)
                     acceleration += 175000 - 3 * _vehicleVelocityF64E08 / 2;
@@ -7358,17 +7464,6 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
             return true;
         }
 
-        // Clear deferred block when passing trigger point
-        if (HasFlag(VehicleFlags::PassedDeferredBlock))
-        {
-            TileElement* tileElement = MapGetTrackElementAtOfTypeSeq(TrackLocation, trackType, 0);
-            if (tileElement->AsTrack()->ShouldClearDeferredBlock())
-            {
-                BlockBrakesCloseDeferredBlock(curRide, TrackLocation, tileElement);
-                ClearFlag(VehicleFlags::PassedDeferredBlock);
-            }
-        }
-
         acceleration += AccelerationFromPitch[moveInfovehicleAnimationGroup];
         _vehicleUnkF64E10++;
     }
@@ -7433,6 +7528,33 @@ bool Vehicle::UpdateTrackMotionBackwardsGetNewTrack(TrackElemType trackType, con
         if (trackType == TrackElemType::LeftReverser || trackType == TrackElemType::RightReverser)
         {
             return false;
+        }
+
+        if (next_vehicle_on_train.IsNull())
+        {
+            Vehicle* head = TrainHead();
+            // If we pass backwards over a trigger point, unset the PassedDeferredBlock flag so that we don't open the previous
+            // block.
+            if (head != nullptr && head->HasFlag(VehicleFlags::PassedDeferredBlock))
+            {
+                if (tileElement->AsTrack()->IsDeferredBlockTrigger())
+                {
+                    printf("Clear passed backwards trigger\n");
+                    head->ClearFlag(VehicleFlags::PassedDeferredBlock);
+                }
+            }
+            // If we pass backwards over a block booster which is set to always stop, then stop TODO decide what to do about
+            // this
+            /*    if (trackType == TrackElemType::BlockBooster)
+                {
+                uint8_t mode=tileElement->AsTrack()->GetBrakeBoosterMode();
+                    if (!HasFlag(VehicleFlags::PassedDeferredBlock)&&(tileElement->AsTrack()->IsBrakeClosed() || mode ==
+               BLOCK_STOP || mode == BLOCK_STOP_AND_REVERSE))
+                    {
+                    printf("Stopping at block booster backwards\n");
+                    head->SetFlag(VehicleFlags::StoppingAtBlock);
+                    }
+                }*/
         }
 
         if (PitchAndRollEnd(curRide, HasFlag(VehicleFlags::CarIsInverted), trackType, tileElement) != pitchAndRollStart)
@@ -7570,7 +7692,9 @@ bool Vehicle::UpdateTrackMotionBackwards(const CarEntry* carEntry, const Ride& c
         if (TrackTypeIsBooster(trackType))
         {
             auto mode = brake_speed >> 6;
-            if (mode == BOOSTER_BRAKE)
+            Vehicle* head = TrainHead();
+            bool isStopping = head != nullptr && head->HasFlag(VehicleFlags::StoppingAtBlock);
+            if (isStopping || (trackType != TrackElemType::BlockBooster && mode == BOOSTER_BRAKE))
             {
                 if (_vehicleVelocityF64E08 > -650000)
                     acceleration -= 175000 + 3 * _vehicleVelocityF64E08 / 2;
@@ -7579,7 +7703,7 @@ bool Vehicle::UpdateTrackMotionBackwards(const CarEntry* carEntry, const Ride& c
                     acceleration += 800000;
                 }
             }
-            else if (mode == BOOSTER_BIDIRECTIONAL)
+            else if (trackType != TrackElemType::BlockBooster && mode == BOOSTER_BIDIRECTIONAL)
             {
                 auto boosterSpeed = GetBoosterSpeed(curRide.type, ((brake_speed & 0x3F) << 16));
                 if (boosterSpeed > -_vehicleVelocityF64E08)

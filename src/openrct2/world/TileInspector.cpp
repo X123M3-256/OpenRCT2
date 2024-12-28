@@ -888,8 +888,9 @@ namespace OpenRCT2::TileInspector
         return GameActions::Result();
     }
 
-    GameActions::Result TrackSetShouldClearDeferredBlock(
-        const CoordsXY& loc, int32_t elementIndex, bool shouldClearDeferredBlock, bool isExecuting)
+    // TODO duplicate of TrackSetChain
+    GameActions::Result TrackSetIsDeferredBlock(
+        const CoordsXY& loc, int32_t elementIndex, bool entireTrackBlock, bool shouldClearDeferredBlock, bool isExecuting)
     {
         TileElement* const trackElement = MapGetNthElementAt(loc, elementIndex);
         if (trackElement == nullptr || trackElement->GetType() != TileElementType::Track)
@@ -898,7 +899,64 @@ namespace OpenRCT2::TileInspector
 
         if (isExecuting)
         {
-            trackElement->AsTrack()->SetShouldClearDeferredBlock(shouldClearDeferredBlock);
+            if (!entireTrackBlock)
+            {
+                trackElement->AsTrack()->SetIsDeferredBlock(shouldClearDeferredBlock);
+                return GameActions::Result();
+            }
+
+            auto type = trackElement->AsTrack()->GetTrackType();
+            int16_t originX = loc.x;
+            int16_t originY = loc.y;
+            int16_t originZ = trackElement->GetBaseZ();
+            uint8_t rotation = trackElement->GetDirection();
+            auto rideIndex = trackElement->AsTrack()->GetRideIndex();
+            auto ride = GetRide(rideIndex);
+            if (ride == nullptr)
+                return GameActions::Result(
+                    GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_RIDE_NOT_FOUND);
+
+            const auto& ted = GetTrackElementDescriptor(type);
+            auto sequenceIndex = trackElement->AsTrack()->GetSequenceIndex();
+            if (sequenceIndex >= ted.numSequences)
+                return GameActions::Result(
+                    GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_TRACK_BLOCK_NOT_FOUND);
+
+            const auto& trackBlock = ted.sequences[sequenceIndex].clearance;
+            uint8_t originDirection = trackElement->GetDirection();
+            CoordsXY offsets = { trackBlock.x, trackBlock.y };
+            CoordsXY coords = { originX, originY };
+            coords += offsets.Rotate(DirectionReverse(originDirection));
+
+            originX = static_cast<int16_t>(coords.x);
+            originY = static_cast<int16_t>(coords.y);
+            originZ -= trackBlock.z;
+
+            for (uint8_t i = 0; i < ted.numSequences; i++)
+            {
+                const auto& trackBlock2 = ted.sequences[i].clearance;
+                CoordsXYZD elem = { originX, originY, originZ + trackBlock2.z, rotation };
+                offsets.x = trackBlock2.x;
+                offsets.y = trackBlock2.y;
+                elem += offsets.Rotate(originDirection);
+
+                TrackElement* nextTrackElement = MapGetTrackElementAtOfTypeSeq(elem, type, i);
+                if (nextTrackElement == nullptr)
+                {
+                    LOG_ERROR("Track map element part not found!");
+                    return GameActions::Result(
+                        GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_TRACK_ELEMENT_NOT_FOUND);
+                }
+
+                // track_remove returns here on failure, not sure when this would ever be hit. Only thing I can think of is
+                // for when you decrease the map size.
+                Guard::Assert(MapGetSurfaceElementAt(elem) != nullptr, "No surface at %d,%d", elem.x >> 5, elem.y >> 5);
+
+                // Keep?
+                // invalidate_test_results(ride);
+
+                nextTrackElement->AsTrack()->SetIsDeferredBlock(shouldClearDeferredBlock);
+            }
         }
 
         return GameActions::Result();

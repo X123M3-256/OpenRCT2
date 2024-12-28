@@ -465,6 +465,7 @@ namespace OpenRCT2::VehicleFlags
     constexpr uint32_t Crashed = (1 << 15);             // Car displays as smoke plume
     constexpr uint32_t CarIsReversed = (1 << 16);       // Car is displayed running backwards
     constexpr uint32_t PassedDeferredBlock = (1 << 17); // Vehicle has passed a block which has not yet been cleared
+    constexpr uint32_t StoppingAtBlock = (1 << 18); // Vehicle is to stop at the next block brake, even if the block is cleared
 } // namespace OpenRCT2::VehicleFlags
 
 enum
