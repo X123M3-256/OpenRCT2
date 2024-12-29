@@ -179,8 +179,8 @@ namespace OpenRCT2::Ui::Windows
         MakeWidget        ({118, 120}, {     89,  41}, WindowWidgetType::Groupbox, WindowColour::Primary  , STR_RIDE_CONSTRUCTION_SEAT_ROT                                                                        ),
         MakeSpinnerWidgets({123, 138}, {     58,  12}, WindowWidgetType::Spinner,  WindowColour::Secondary, 0,                                                STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP),
         MakeWidget        ({161, 338}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_SIMULATE),                         STR_SIMULATE_RIDE_TIP                               ),
-        MakeWidget        ({105, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_BOOSTER_BIDIRECTIONAL),            STR_SIMULATE_RIDE_TIP                               ),
-        MakeWidget        ({131, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_BLOCK_STOP),                       STR_SIMULATE_RIDE_TIP                               ),
+        MakeWidget        ({105, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_BOOSTER_BIDIRECTIONAL),            STR_RIDE_CONSTRUCTION_BOOSTER_BIDIRECTIONAL_TIP     ),
+        MakeWidget        ({131, 131}, {     24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, ImageId(SPR_G2_BLOCK_STOP),                       STR_RIDE_CONSTRUCTION_BOOSTER_BRAKE_TIP             ),
         kWidgetsEnd,
     };
     // clang-format on
@@ -1455,7 +1455,8 @@ namespace OpenRCT2::Ui::Windows
                     }
                     break;
                 case WIDX_BOOSTER_BIDIRECTIONAL:
-                    if (_selectedTrackType == TrackElemType::BlockBooster)
+                    if (_selectedTrackType == TrackElemType::BlockBooster
+                        || _currentlySelectedTrack.trackType == TrackElemType::BlockBooster)
                     {
                         switch (_currentBrakeMode)
                         {
@@ -1494,7 +1495,8 @@ namespace OpenRCT2::Ui::Windows
                     WindowRideConstructionUpdateActiveElements();
                     break;
                 case WIDX_BOOSTER_BRAKE:
-                    if (_selectedTrackType == TrackElemType::BlockBooster)
+                    if (_selectedTrackType == TrackElemType::BlockBooster
+                        || _currentlySelectedTrack.trackType == TrackElemType::BlockBooster)
                     {
                         switch (_currentBrakeMode)
                         {
@@ -1622,7 +1624,14 @@ namespace OpenRCT2::Ui::Windows
                 uint16_t brakeSpeed2 = ((_currentBrakeSpeed * 9) >> 2) & 0xFFFF;
                 if (TrackTypeIsBooster(_selectedTrackType) || TrackTypeIsBooster(_currentlySelectedTrack.trackType))
                 {
-                    brakeSpeed2 = GetBoosterSpeed(currentRide->type, brakeSpeed2);
+                    if ((_selectedTrackType == TrackElemType::BlockBooster
+                         || _currentlySelectedTrack.trackType == TrackElemType::BlockBooster)
+                        && (_currentBrakeMode == BLOCK_STOP || _currentBrakeMode == BLOCK_STOP_AND_REVERSE))
+                    {
+                        brakeSpeed2 = _currentBrakeSpeed;
+                    }
+                    else
+                        brakeSpeed2 = GetBoosterSpeed(currentRide->type, brakeSpeed2);
                 }
                 ft.Add<uint16_t>(brakeSpeed2);
             }
@@ -2030,6 +2039,7 @@ namespace OpenRCT2::Ui::Windows
             {
                 if (!boosterTrackSelected)
                 {
+                    widgets[WIDX_SPEED_SETTING_SPINNER].text = STR_RIDE_CONSTRUCTION_BRAKE_SPEED_VELOCITY;
                     widgets[WIDX_SPEED_GROUPBOX].text = STR_RIDE_CONSTRUCTION_BRAKE_SPEED;
                     widgets[WIDX_SPEED_SETTING_SPINNER].tooltip = STR_RIDE_CONSTRUCTION_BRAKE_SPEED_LIMIT_TIP;
                     widgets[WIDX_SPEED_SETTING_SPINNER_UP].tooltip = STR_RIDE_CONSTRUCTION_BRAKE_SPEED_LIMIT_TIP;
@@ -2037,27 +2047,40 @@ namespace OpenRCT2::Ui::Windows
                 }
                 else
                 {
-                    widgets[WIDX_SPEED_GROUPBOX].text = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED;
                     widgets[WIDX_SPEED_SETTING_SPINNER].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_SPEED_SETTING_SPINNER_UP].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_SPEED_SETTING_SPINNER_DOWN].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED_LIMIT_TIP;
                     widgets[WIDX_BOOSTER_BIDIRECTIONAL].type = WindowWidgetType::FlatBtn;
                     widgets[WIDX_BOOSTER_BRAKE].type = WindowWidgetType::FlatBtn;
+
                     if (_selectedTrackType != TrackElemType::BlockBooster
                         && _currentlySelectedTrack.trackType != TrackElemType::BlockBooster)
                     {
-                        printf("Not a block\n");
+                        widgets[WIDX_SPEED_GROUPBOX].text = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED;
+                        widgets[WIDX_SPEED_SETTING_SPINNER].text = STR_RIDE_CONSTRUCTION_BRAKE_SPEED_VELOCITY;
                         widgets[WIDX_BOOSTER_BIDIRECTIONAL].image = ImageId(SPR_G2_BOOSTER_BIDIRECTIONAL);
+                        widgets[WIDX_BOOSTER_BIDIRECTIONAL].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_BIDIRECTIONAL_TIP;
+                        widgets[WIDX_BOOSTER_BRAKE].tooltip = STR_RIDE_CONSTRUCTION_BOOSTER_BRAKE_TIP;
                     }
                     else
                     {
-                        printf("Block\n");
+                        if (_currentBrakeMode == BLOCK_STOP || _currentBrakeMode == BLOCK_STOP_AND_REVERSE)
+                        {
+                            widgets[WIDX_SPEED_GROUPBOX].text = STR_RIDE_CONSTRUCTION_DELAY;
+                            widgets[WIDX_SPEED_SETTING_SPINNER].text = STR_RIDE_CONSTRUCTION_DELAY_TIME;
+                        }
+                        else
+                        {
+                            widgets[WIDX_SPEED_GROUPBOX].text = STR_RIDE_CONSTRUCTION_BOOSTER_SPEED;
+                            widgets[WIDX_SPEED_SETTING_SPINNER].text = STR_RIDE_CONSTRUCTION_BRAKE_SPEED_VELOCITY;
+                        }
                         widgets[WIDX_BOOSTER_BIDIRECTIONAL].image = ImageId(SPR_G2_BLOCK_REVERSE);
+                        widgets[WIDX_BOOSTER_BIDIRECTIONAL].tooltip = STR_RIDE_CONSTRUCTION_BLOCK_REVERSE_TIP;
+                        widgets[WIDX_BOOSTER_BRAKE].tooltip = STR_RIDE_CONSTRUCTION_BLOCK_STOP_TIP;
                     }
                 }
 
                 _currentlyShowingBrakeOrBoosterSpeed = true;
-                widgets[WIDX_SPEED_SETTING_SPINNER].text = STR_RIDE_CONSTRUCTION_BRAKE_SPEED_VELOCITY;
 
                 widgets[WIDX_SPEED_SETTING_SPINNER].type = WindowWidgetType::Spinner;
                 widgets[WIDX_SPEED_SETTING_SPINNER_UP].type = WindowWidgetType::Button;
@@ -2132,7 +2155,8 @@ namespace OpenRCT2::Ui::Windows
 
             if (boosterTrackSelected)
             {
-                if (_selectedTrackType == TrackElemType::BlockBooster)
+                if (_selectedTrackType == TrackElemType::BlockBooster
+                    || _currentlySelectedTrack.trackType == TrackElemType::BlockBooster)
                 {
                     switch (_currentBrakeMode)
                     {

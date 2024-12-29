@@ -5621,16 +5621,21 @@ void Vehicle::CheckAndApplyBlockSectionStopSite()
                         && (mode == BLOCK_STOP || mode == BLOCK_STOP_AND_REVERSE))
                     {
                         SetFlag(VehicleFlags::StoppedOnHoldingBrake);
-                        vertical_drop_countdown = 90;
+                        vertical_drop_countdown = (brake_speed & 0x3F) << 2;
                     }
                 }
             }
 
             if (velocity == 0 && (!curRide->IsBlockSectioned() || !trackElement->AsTrack()->IsBrakeClosed()))
             {
-                if (TrainHead() == this && HasFlag(VehicleFlags::StoppingAtBlock))
+                if (TrainHead() == this)
                 {
                     ClearFlag(VehicleFlags::StoppingAtBlock);
+                    // For some reason, the holding brake flag is not normally cleared until 70 ticks after the timeout expires
+                    // This can result in the train failing to stop if it reaches another stop brake before the, so the flag
+                    // must be cleared explicitly
+                    if (vertical_drop_countdown <= 0)
+                        ClearFlag(VehicleFlags::StoppedOnHoldingBrake);
                 }
 
                 if (trackElement->AsTrack()->IsDeferredBlock())
@@ -7269,6 +7274,14 @@ bool Vehicle::UpdateTrackMotionForwards(const CarEntry* carEntry, const Ride& cu
         else if (TrackTypeIsBooster(trackType))
         {
             auto boosterSpeed = GetBoosterSpeed(curRide.type, ((brake_speed & 0x3F) << 16));
+            // If this is a block booster with a delay setting rather than a speed setting, set the speed to 4mph.
+            // This effectively turns the booster off but it's less annoying than alternatives
+            auto mode = brake_speed >> 6;
+            if (trackType == TrackElemType::BlockBooster && (mode == BLOCK_STOP || mode == BLOCK_STOP_AND_REVERSE))
+            {
+                boosterSpeed = 2 << 16;
+            }
+
             Vehicle* head = TrainHead();
             bool isStopping = head != nullptr && head->HasFlag(VehicleFlags::StoppingAtBlock);
             if (isStopping)

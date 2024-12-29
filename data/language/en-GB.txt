@@ -3786,4 +3786,10 @@ STR_6708    :Smooth Strength
 STR_6709    :Enter Smooth Strength between {COMMA16} and {COMMA16}
 STR_6710    :Stable sort
 STR_6711    :Clear previous block
-STR_6712    :Block Booster
+STR_6712    :Block booster
+STR_6713    :Boost in both directions
+STR_6714    :Brake in reverse direction
+STR_6715    :Always stop at block
+STR_6716    :Leave in reverse direction
+STR_6717    :Delay time
+STR_6718    :{POP16}{COMMA1DP16} s
