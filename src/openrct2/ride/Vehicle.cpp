@@ -6629,23 +6629,15 @@ bool Vehicle::UpdateMotionCollisionDetection(const CoordsXYZ& loc, EntityId* oth
                 continue;
 
             const CoordsXY directionVector = Math::Trigonometry::YawToDirectionVector[Entity::Yaw::YawTo64(Orientation)];
-            float directionVectorX = float(directionVector.x);
-            float directionVectorY = float(directionVector.y);
-            const float directionVectorLength = sqrtf(
-                (directionVectorX * directionVectorX) + (directionVectorY * directionVectorY));
-            directionVectorX /= directionVectorLength;
-            directionVectorY /= directionVectorLength;
+            const CoordsXY vehicle2DirectionVector = { vehicle2->x - loc.x, vehicle2->y - loc.y };
 
-            float vehicle2DirectionX = float(vehicle2->x - loc.x);
-            float vehicle2DirectionY = float(vehicle2->y - loc.y);
-            const float vehicle2DirectionLength = sqrtf(
-                (vehicle2DirectionX * vehicle2DirectionX) + (vehicle2DirectionY * vehicle2DirectionY));
-            vehicle2DirectionX /= vehicle2DirectionLength;
-            vehicle2DirectionY /= vehicle2DirectionLength;
+            const int dot_product = (directionVector.x * vehicle2DirectionVector.x)
+                + (directionVector.y * vehicle2DirectionVector.y);
 
-            const float dot_product = (directionVectorX * vehicle2DirectionX) + (directionVectorY * vehicle2DirectionY);
-
-            if (dot_product > 0.35)
+            if (dot_product > 0
+                && dot_product * dot_product > 8028
+                        * ((vehicle2DirectionVector.x * vehicle2DirectionVector.x)
+                           + (vehicle2DirectionVector.y * vehicle2DirectionVector.y)))
             {
                 collideVehicle = vehicle2;
                 mayCollide = true;
