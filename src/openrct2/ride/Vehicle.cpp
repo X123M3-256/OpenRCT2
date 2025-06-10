@@ -3613,7 +3613,7 @@ void Vehicle::UpdateTravellingCableLift()
                 // printf("progress at disconnect %d\n",track_progress);
                 // printf("acceleration at disconnect %d\n",acceleration);
                 // printf("velocity at disconnect %d\n",velocity);
-                acceleration = -8 * track_progress * ((acceleration * 26563) / velocity);
+                acceleration = -8 * (track_progress & 0x1F) * ((acceleration * 26563) / velocity);
                 // printf("final acceleration %d\n",acceleration);
                 SetState(Vehicle::Status::Travelling, 1);
                 UpdateTrackMotion(nullptr);
