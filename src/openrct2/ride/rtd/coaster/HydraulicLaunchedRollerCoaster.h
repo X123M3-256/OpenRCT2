@@ -22,7 +22,7 @@ constexpr RideTypeDescriptor HydraulicLaunchedRollerCoasterRTD =
     .TrackPaintFunctions = TrackDrawerDescriptor({
         .trackStyle = TrackStyle::hydraulicLaunchedCoasterQuad,
         .supportType = MetalSupportType::Tubes,
-        .enabledTrackGroups = { TrackGroup::flat, TrackGroup::straight, TrackGroup::stationEnd, TrackGroup::flatRollBanking, TrackGroup::slope, TrackGroup::slopeSteepLong, TrackGroup::slopeSteepUp, TrackGroup::slopeSteepDown, TrackGroup::slopeCurve, TrackGroup::slopeCurveSteep, TrackGroup::sBend, TrackGroup::curveSmall, TrackGroup::curve, TrackGroup::curveLarge, TrackGroup::corkscrew, TrackGroup::helixDownBankedHalf, TrackGroup::helixUpBankedHalf, TrackGroup::brakes, TrackGroup::onridePhoto, TrackGroup::slopeVertical, TrackGroup::barrelRoll, TrackGroup::slopeCurveBanked, TrackGroup::blockBrakes, TrackGroup::slopeRollBanking, TrackGroup::curveVertical, TrackGroup::quarterLoop, TrackGroup::halfLoop, TrackGroup::halfLoopMedium, TrackGroup::halfLoopLarge, TrackGroup::corkscrewLarge, TrackGroup::zeroGRoll, TrackGroup::zeroGRollLarge, TrackGroup::slopeCurveLarge, TrackGroup::diagBrakes, TrackGroup::diagBlockBrakes, TrackGroup::inclinedBrakes, TrackGroup::diagSlopeSteepLong, TrackGroup::diveLoop, TrackGroup::cableLaunch, TrackGroup::magneticBrake},
+        .enabledTrackGroups = { TrackGroup::flat, TrackGroup::straight, TrackGroup::stationEnd, TrackGroup::flatRollBanking, TrackGroup::slope, TrackGroup::slopeSteepLong, TrackGroup::slopeSteepUp, TrackGroup::slopeSteepDown, TrackGroup::slopeCurve, TrackGroup::slopeCurveSteep, TrackGroup::sBend, TrackGroup::curveSmall, TrackGroup::curve, TrackGroup::curveLarge, TrackGroup::corkscrew, TrackGroup::helixDownBankedHalf, TrackGroup::helixUpBankedHalf, TrackGroup::brakes, TrackGroup::onridePhoto, TrackGroup::slopeVertical, TrackGroup::barrelRoll, TrackGroup::slopeCurveBanked, TrackGroup::blockBrakes, TrackGroup::slopeRollBanking, TrackGroup::curveVertical, TrackGroup::quarterLoop, TrackGroup::halfLoop, TrackGroup::verticalLoop, TrackGroup::halfLoopMedium, TrackGroup::halfLoopLarge, TrackGroup::corkscrewLarge, TrackGroup::zeroGRoll, TrackGroup::zeroGRollLarge, TrackGroup::slopeCurveLarge, TrackGroup::diagBrakes, TrackGroup::diagBlockBrakes, TrackGroup::inclinedBrakes, TrackGroup::diagSlopeSteepLong, TrackGroup::diveLoop, TrackGroup::cableLaunch, TrackGroup::magneticBrake},
         .extraTrackGroups =  {TrackGroup::flatToSteepSlope},
     }),
     .InvertedTrackPaintFunctions = {},
@@ -83,7 +83,7 @@ constexpr RideTypeDescriptor HydraulicLaunchedRollerCoasterRTD =
             { RatingsModifierType::PenaltyLateralGs,      0,                24576, 35746, 49648 },
         },
     },
-    .CatchCarParameters = {&kCableLaunchVehicle,4},
+    .CatchCarParameters = {&kCableLaunchVehicle,4,210,3},
     .AlternateTrackList = {3,{{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_2,SPR_RIDE_CONSTRUCTION_BI_RAIL_TRACK},{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_1,SPR_RIDE_CONSTRUCTION_TRI_RAIL_TRACK},{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER,SPR_RIDE_CONSTRUCTION_QUAD_RAIL_TRACK}}},
 };
 
@@ -95,7 +95,7 @@ constexpr RideTypeDescriptor HydraulicLaunchedRollerCoasterAlt1RTD =
     .TrackPaintFunctions = TrackDrawerDescriptor({
         .trackStyle = TrackStyle::hydraulicLaunchedCoasterBi,
         .supportType = MetalSupportType::Tubes,
-        .enabledTrackGroups = { TrackGroup::flat, TrackGroup::straight, TrackGroup::stationEnd, TrackGroup::flatRollBanking, TrackGroup::slope, TrackGroup::slopeSteepLong, TrackGroup::slopeSteepUp, TrackGroup::slopeSteepDown, TrackGroup::slopeCurve, TrackGroup::slopeCurveSteep, TrackGroup::sBend, TrackGroup::curveSmall, TrackGroup::curve, TrackGroup::curveLarge, TrackGroup::corkscrew, TrackGroup::helixDownBankedHalf, TrackGroup::helixUpBankedHalf, TrackGroup::brakes, TrackGroup::onridePhoto, TrackGroup::slopeVertical, TrackGroup::barrelRoll, TrackGroup::slopeCurveBanked, TrackGroup::blockBrakes, TrackGroup::slopeRollBanking, TrackGroup::curveVertical, TrackGroup::quarterLoop, TrackGroup::halfLoop, TrackGroup::halfLoopMedium, TrackGroup::halfLoopLarge, TrackGroup::corkscrewLarge, TrackGroup::zeroGRoll, TrackGroup::zeroGRollLarge, TrackGroup::slopeCurveLarge, TrackGroup::diagBrakes, TrackGroup::diagBlockBrakes, TrackGroup::inclinedBrakes, TrackGroup::diagSlopeSteepLong, TrackGroup::diveLoop ,TrackGroup::cableLaunch, TrackGroup::magneticBrake},
+        .enabledTrackGroups = { TrackGroup::flat, TrackGroup::straight, TrackGroup::stationEnd, TrackGroup::flatRollBanking, TrackGroup::slope, TrackGroup::slopeSteepLong, TrackGroup::slopeSteepUp, TrackGroup::slopeSteepDown, TrackGroup::slopeCurve, TrackGroup::slopeCurveSteep, TrackGroup::sBend, TrackGroup::curveSmall, TrackGroup::curve, TrackGroup::curveLarge, TrackGroup::corkscrew, TrackGroup::helixDownBankedHalf, TrackGroup::helixUpBankedHalf, TrackGroup::brakes, TrackGroup::onridePhoto, TrackGroup::slopeVertical, TrackGroup::barrelRoll, TrackGroup::slopeCurveBanked, TrackGroup::blockBrakes, TrackGroup::slopeRollBanking, TrackGroup::curveVertical, TrackGroup::quarterLoop, TrackGroup::halfLoop, TrackGroup::verticalLoop, TrackGroup::halfLoopMedium, TrackGroup::halfLoopLarge, TrackGroup::corkscrewLarge, TrackGroup::zeroGRoll, TrackGroup::zeroGRollLarge, TrackGroup::slopeCurveLarge, TrackGroup::diagBrakes, TrackGroup::diagBlockBrakes, TrackGroup::inclinedBrakes, TrackGroup::diagSlopeSteepLong, TrackGroup::diveLoop ,TrackGroup::cableLaunch, TrackGroup::magneticBrake},
         .extraTrackGroups =  {TrackGroup::flatToSteepSlope},
     }),
     .InvertedTrackPaintFunctions = {},
@@ -155,7 +155,7 @@ constexpr RideTypeDescriptor HydraulicLaunchedRollerCoasterAlt1RTD =
             { RatingsModifierType::PenaltyLateralGs,      0,                24576, 35746, 49648 },
         },
     },
-    .CatchCarParameters = {&kCableLaunchVehicle,4},
+    .CatchCarParameters = {&kCableLaunchVehicle,4,210,3},
     .AlternateTrackList = {3,{{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_2,SPR_RIDE_CONSTRUCTION_BI_RAIL_TRACK},{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_1,SPR_RIDE_CONSTRUCTION_TRI_RAIL_TRACK},{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER,SPR_RIDE_CONSTRUCTION_QUAD_RAIL_TRACK}}},
 };
 
@@ -227,7 +227,7 @@ constexpr const RideTypeDescriptor HydraulicLaunchedRollerCoasterAlt2RTD =
             { RatingsModifierType::PenaltyLateralGs,      0,                24576, 35746, 49648 },
         },
     },
-    .CatchCarParameters = {&kCableLaunchVehicle,4},
+    .CatchCarParameters = {&kCableLaunchVehicle,4,210,3},
     .AlternateTrackList = {3,{{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_2,SPR_RIDE_CONSTRUCTION_BI_RAIL_TRACK},{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER_ALT_1,SPR_RIDE_CONSTRUCTION_TRI_RAIL_TRACK},{RIDE_TYPE_HYDRAULIC_LAUNCHED_ROLLER_COASTER,SPR_RIDE_CONSTRUCTION_QUAD_RAIL_TRACK}}},
 };
 // clang-format on

@@ -4640,7 +4640,7 @@ void Vehicle::Paint(PaintSession& session, int32_t imageDirection) const
     int32_t zOffset = 0;
     if (IsCableLift())
     {
-        carEntry = GetRide()->getRideTypeDescriptor().CatchCarParameters.carEntry;
+        carEntry = GetRide()->getRideTypeDescriptor().CatchCarParameters.Car;
         if (carEntry == nullptr)
         {
             // Fall back on the default cable lift vehicle

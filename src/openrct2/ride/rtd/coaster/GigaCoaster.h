@@ -86,6 +86,6 @@ constexpr RideTypeDescriptor GigaCoasterRTD =
             { RatingsModifierType::PenaltyLateralGs,      0,                36864, 30384, 49648 },
         },
     },
-    .CatchCarParameters = { &kCableLiftVehicle, 5}
+    .CatchCarParameters = { &kCableLiftVehicle, 5, 0, 0}
 };
 // clang-format on

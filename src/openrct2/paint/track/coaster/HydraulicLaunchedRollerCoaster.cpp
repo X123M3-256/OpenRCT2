@@ -46,7 +46,7 @@ namespace OpenRCT2::HydraulicLaunchedRC
 
         if (trackElement.HasCableLift())
         {
-            int sprites[9] = { 3, 3, 3, 2, 1, 0, 0, 1, 2 };
+            int sprites[10] = { 3, 3, 3, 2, 1, 0, 0, 1, 2, 3 };
             int spriteIndex = sprites[trackElement.GetCableLaunchFinState()];
             PaintAddImageAsParentRotated(
                 session, direction, session.TrackColours.WithIndex(imageIds[direction][1] + 2 * spriteIndex), { 0, 0, height },
@@ -18806,7 +18806,7 @@ namespace OpenRCT2::HydraulicLaunchedRC
         PaintSession& session, const Ride& ride, uint8_t trackSequence, uint8_t direction, int32_t height,
         const TrackElement& trackElement, SupportType supportType)
     {
-        int sprites[9] = { 3, 3, 3, 2, 1, 0, 0, 1, 2 };
+        int sprites[10] = { 3, 3, 3, 2, 1, 0, 0, 1, 2, 3 };
         int spriteIndex = sprites[trackElement.GetCableLaunchFinState()];
         PaintAddImageAsParentRotated(
             session, direction,

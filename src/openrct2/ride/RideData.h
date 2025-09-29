@@ -228,8 +228,10 @@ struct RideLegacyBoosterSettings
 
 struct RideCatchCarParameters
 {
-    const CarEntry* carEntry;
-    uint8_t segments;
+    const CarEntry* Car;
+    uint8_t Segments;
+    uint8_t MaxAcceleration;
+    uint8_t WaitPosition;
 };
 
 struct RideAlternateTrack
@@ -529,7 +531,7 @@ struct RideTypeDescriptor
 
     RideRatingsDescriptor RatingsData{};
 
-    RideCatchCarParameters CatchCarParameters = { nullptr, 0 };
+    RideCatchCarParameters CatchCarParameters = { nullptr, 0, 0, 0 };
     RideAlternateTrackList AlternateTrackList = { 0, { { 0, 0 }, { 0, 0 }, { 0, 0 } } };
     UpdateRotatingFunction UpdateRotating = UpdateRotatingDefault;
 
@@ -670,7 +672,7 @@ constexpr RideTypeDescriptor kDummyRTD =
             { RatingsModifierType::NoModifier, 0, 0, 0, 0 },
         },
     },
-    .CatchCarParameters = {nullptr,0},
+    .CatchCarParameters = {nullptr,0,0,0},
     .AlternateTrackList = {0,{{0,0}}},
     .UpdateRotating = UpdateRotatingDefault,
     .LightFXAddLightsMagicVehicle = nullptr,

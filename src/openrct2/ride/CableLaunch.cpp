@@ -91,15 +91,13 @@ void Vehicle::CableLaunchUpdateArriving()
 
     CableLiftUpdateTrackMotion();
 
-    if (track_progress == 3)
+    auto wait_position = GetRide()->getRideTypeDescriptor().CatchCarParameters.WaitPosition;
+    if (track_progress <= wait_position)
     {
         velocity = 0;
         acceleration = 0;
         SetState(Vehicle::Status::WaitingForPassengers, sub_state);
     }
-    //    sub_state++;
-    //    if (sub_state >= 64)
-    //        SetState(Vehicle::Status::MovingToEndOfStation, sub_state);
 }
 
 static TileElement* CableLaunchGetTileElement(const Ride& ride)
@@ -153,7 +151,7 @@ static void CableLaunchUpdateFinStateForTile(CoordsXYZ loc, TrackElement* tileEl
         default:
             break;
     }
-    if (set_lowered)
+    if (set_lowered && state != CABLE_LAUNCH_FIN_STATE_NONE)
         new_state = CABLE_LAUNCH_FIN_STATE_LOWERING_0;
     if (new_state != state)
     {
@@ -363,11 +361,11 @@ void Vehicle::CableLaunchUpdateTravelling()
     // If the catch car has already stopped, don't run the motion update
     if (sub_state & 0x80)
     {
-        // if (CableLaunchCheckBlockClosed(*curRide))
-        //{
-        SetState(Vehicle::Status::MovingToEndOfStation, sub_state & 0x7F);
-        //    return;
-        //}
+        if ((sub_state & 0x7F) > 32) // CableLaunchCheckBlockClosed(*curRide))
+        {
+            SetState(Vehicle::Status::MovingToEndOfStation, sub_state & 0x7F);
+            return;
+        }
         return;
     }
 

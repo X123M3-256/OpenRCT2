@@ -3371,7 +3371,7 @@ void Vehicle::UpdateArriving()
 
         // This is triggered if train rolls back after cable launch and enters the station backwards; it should relaunch without
         // unloading passengers
-        if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH)
+        if (curRide->lifecycleFlags & RIDE_LIFECYCLE_CABLE_LAUNCH && status == Vehicle::Status::Travelling)
         {
             printf("Detected rollback into station ride %d\n", curRide->id.ToUnderlying());
             velocity = 0;
@@ -3379,12 +3379,12 @@ void Vehicle::UpdateArriving()
             SetState(Vehicle::Status::WaitingForCableLift, 0);
             // ClearFlag(VehicleFlags::PassedDeferredBlock);
 
-            // Recall catch car if it exists
-            Vehicle* cableLift = GetEntity<Vehicle>(curRide->cableLift);
-            if (cableLift != nullptr)
-            {
-                cableLift->SetState(Vehicle::Status::MovingToEndOfStation, 0);
-            }
+            // Recall catch car if it exists TODO only needed for deferred blocks
+            // Vehicle* cableLift = GetEntity<Vehicle>(curRide->cableLift);
+            // if (cableLift != nullptr)
+            //{
+            //    cableLift->SetState(Vehicle::Status::MovingToEndOfStation, 0);
+            //}
             return;
         }
 
@@ -5673,12 +5673,12 @@ void Vehicle::CheckAndApplyBlockSectionStopSite()
                         acceleration = 0;
                         NumLaps++;
                         SetState(Vehicle::Status::WaitingForCableLift, sub_state);
-                        // Recall catch car if it exists
-                        Vehicle* cableLift = GetEntity<Vehicle>(curRide->cableLift);
-                        if (cableLift != nullptr)
-                        {
-                            cableLift->SetState(Vehicle::Status::MovingToEndOfStation, 0);
-                        }
+                        // Recall catch car if it exists TODO only needed for deferred blocks
+                        // Vehicle* cableLift = GetEntity<Vehicle>(curRide->cableLift);
+                        // if (cableLift != nullptr)
+                        //{
+                        //    cableLift->SetState(Vehicle::Status::MovingToEndOfStation, 0);
+                        //}
                     }
 
                     return;

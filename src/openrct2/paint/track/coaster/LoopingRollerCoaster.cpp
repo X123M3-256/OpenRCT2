@@ -68,9 +68,24 @@ static void LoopingRCTrackFlat(
                     { { 0, 6, height }, { 32, 20, 3 } });
                 break;
         }
-        if (TrackPaintUtilShouldPaintSupports(session.MapPosition))
+    }
+    else if (trackElement.HasCableLift())
+    {
+        switch (direction)
         {
-            MetalASupportsPaintSetup(session, supportType.metal, MetalSupportPlace::Centre, 0, height, session.SupportColours);
+            case 0:
+            case 2:
+                PaintAddImageAsParentRotated(
+
+                    session, direction, session.TrackColours.WithIndex(SPR_LOOPING_RC_FLAT_CHAINED_SW_NE), { 0, 0, height },
+                    { { 0, 6, height }, { 32, 20, 3 } });
+                break;
+            case 1:
+            case 3:
+                PaintAddImageAsParentRotated(
+                    session, direction, session.TrackColours.WithIndex(SPR_LOOPING_RC_FLAT_CHAINED_NW_SE), { 0, 0, height },
+                    { { 0, 6, height }, { 32, 20, 3 } });
+                break;
         }
     }
     else
@@ -90,10 +105,38 @@ static void LoopingRCTrackFlat(
                     { { 0, 6, height }, { 32, 20, 3 } });
                 break;
         }
-        if (TrackPaintUtilShouldPaintSupports(session.MapPosition))
-        {
-            MetalASupportsPaintSetup(session, supportType.metal, MetalSupportPlace::Centre, 0, height, session.SupportColours);
-        }
+    }
+    if (TrackPaintUtilShouldPaintSupports(session.MapPosition))
+    {
+        MetalASupportsPaintSetup(session, supportType.metal, MetalSupportPlace::Centre, 0, height, session.SupportColours);
+    }
+    PaintUtilPushTunnelRotated(session, direction, height, kTunnelGroup, TunnelSubType::Flat);
+    PaintUtilSetSegmentSupportHeight(session, PaintUtilRotateSegments(BlockedSegments::kStraightFlat, direction), 0xFFFF, 0);
+    PaintUtilSetGeneralSupportHeight(session, height + kDefaultGeneralSupportHeight);
+}
+
+static void TrackCableLaunch(
+    PaintSession& session, const Ride& ride, uint8_t trackSequence, uint8_t direction, int32_t height,
+    const TrackElement& trackElement, SupportType supportType)
+{
+    switch (direction)
+    {
+        case 0:
+        case 2:
+            PaintAddImageAsParentRotated(
+                session, direction, session.TrackColours.WithIndex(SPR_LOOPING_RC_FLAT_CHAINED_SW_NE), { 0, 0, height },
+                { { 0, 6, height }, { 32, 20, 3 } });
+            break;
+        case 1:
+        case 3:
+            PaintAddImageAsParentRotated(
+                session, direction, session.TrackColours.WithIndex(SPR_LOOPING_RC_FLAT_CHAINED_NW_SE), { 0, 0, height },
+                { { 0, 6, height }, { 32, 20, 3 } });
+            break;
+    }
+    if (TrackPaintUtilShouldPaintSupports(session.MapPosition))
+    {
+        MetalASupportsPaintSetup(session, supportType.metal, MetalSupportPlace::Centre, 0, height, session.SupportColours);
     }
     PaintUtilPushTunnelRotated(session, direction, height, kTunnelGroup, TunnelSubType::Flat);
     PaintUtilSetSegmentSupportHeight(session, PaintUtilRotateSegments(BlockedSegments::kStraightFlat, direction), 0xFFFF, 0);
@@ -10585,6 +10628,8 @@ TrackPaintFunction GetTrackPaintFunctionLoopingRC(OpenRCT2::TrackElemType trackT
 
         case TrackElemType::Booster:
             return LoopingRCTrackBooster;
+        case TrackElemType::CableLaunch:
+            return TrackCableLaunch;
 
         case TrackElemType::DiagBrakes:
         case TrackElemType::DiagBlockBrakes:

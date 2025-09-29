@@ -3780,7 +3780,7 @@ static void RideCreateCatchCar(Ride& ride)
     auto tileElement = MapGetTrackElementAt(cableLiftLoc);
     int32_t direction = tileElement->GetDirection();
 
-    int segments = ride.getRideTypeDescriptor().CatchCarParameters.segments;
+    int segments = ride.getRideTypeDescriptor().CatchCarParameters.Segments;
 
     Vehicle* head = nullptr;
     Vehicle* tail = nullptr;
@@ -3914,10 +3914,10 @@ ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool applyVehic
         int targetSpeed = ride.launchSpeed;
         int launchAccel = ((6 * (targetSpeed * targetSpeed)) / (4 * (numTiles - brakeTiles)));
 
-        // Set max acceleration at 10 tiles per second^2 (about 18.5m/s^2)
-        if (launchAccel > 210)
+        int maxAccel = ride.getRideTypeDescriptor().CatchCarParameters.MaxAcceleration;
+        if (launchAccel > maxAccel)
         {
-            launchAccel = 210;
+            launchAccel = maxAccel;
         }
         Vehicle* catchCar = GetEntity<Vehicle>(ride.cableLift);
         // This shouldn't happen
@@ -3927,13 +3927,15 @@ ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool applyVehic
 
         if (applyTrack)
         {
+            int fin_state = (ride.mode == RideMode::poweredLaunchPasstrough) ? CABLE_LAUNCH_FIN_STATE_NONE
+                                                                             : CABLE_LAUNCH_FIN_STATE_RAISED;
             // Set first tile of cable launch end piece
             cableLiftTileElement->AsTrack()->SetHasCableLift(true);
             if (brakeTiles >= 2)
                 cableLiftTileElement->AsTrack()->SetCableLaunchIsBrakeSection(true);
             else
                 cableLiftTileElement->AsTrack()->SetCableLaunchIsBrakeSection(false);
-            cableLiftTileElement->AsTrack()->SetCableLaunchFinState(CABLE_LAUNCH_FIN_STATE_RAISED);
+            cableLiftTileElement->AsTrack()->SetCableLaunchFinState(fin_state);
 
             // Set second tile of cable launch end piece
             auto type = cableLiftTileElement->AsTrack()->GetTrackType();
@@ -3946,7 +3948,7 @@ ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool applyVehic
             {
                 trackElement->SetCableLaunchIsBrakeSection(true);
                 trackElement->SetHasCableLift(true);
-                trackElement->SetCableLaunchFinState(CABLE_LAUNCH_FIN_STATE_RAISED);
+                trackElement->SetCableLaunchFinState(fin_state);
             }
 
             // Set remaining launch tiles
@@ -3972,7 +3974,7 @@ ResultWithMessage RideInitialiseCableLiftTrack(const Ride& ride, bool applyVehic
                     break;
 
                 // Set all fins to raised
-                tileElement->AsTrack()->SetCableLaunchFinState(CABLE_LAUNCH_FIN_STATE_RAISED);
+                tileElement->AsTrack()->SetCableLaunchFinState(fin_state);
                 MapInvalidateElement(loc, tileElement);
             }
         }
@@ -3991,17 +3993,18 @@ static ResultWithMessage RideCreateCableLift(RideId rideIndex, bool isApplying)
     if (ride == nullptr)
         return { false };
 
-    if (ride->mode != RideMode::continuousCircuitBlockSectioned && ride->mode != RideMode::continuousCircuit)
-    {
-        return { false, STR_CABLE_LIFT_UNABLE_TO_WORK_IN_THIS_OPERATING_MODE };
-    }
+    // TODO don't think this is necessary
+    // if (ride->mode != RideMode::continuousCircuitBlockSectioned && ride->mode != RideMode::continuousCircuit)
+    //{
+    //     return { false, STR_CABLE_LIFT_UNABLE_TO_WORK_IN_THIS_OPERATING_MODE };
+    // }
 
     if (ride->numCircuits > 1)
     {
         return { false, STR_MULTICIRCUIT_NOT_POSSIBLE_WITH_CABLE_LIFT_HILL };
     }
 
-    if (count_free_misc_sprite_slots() <= ride->getRideTypeDescriptor().CatchCarParameters.segments)
+    if (count_free_misc_sprite_slots() <= ride->getRideTypeDescriptor().CatchCarParameters.Segments)
     {
         return { false, STR_UNABLE_TO_CREATE_ENOUGH_VEHICLES };
     }
