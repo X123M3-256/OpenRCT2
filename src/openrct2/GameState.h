@@ -18,6 +18,7 @@
 #include "interface/ZoomLevel.h"
 #include "management/Finance.h"
 #include "management/NewsItem.h"
+#include "particle/Particle.h"
 #include "ride/Ride.h"
 #include "ride/RideRatings.h"
 #include "scenario/ScenarioOptions.h"
@@ -99,6 +100,8 @@ namespace OpenRCT2
         ObjectEntryIndex lastEntranceStyle;
 
         CheatsState cheats;
+
+        ParticleList particles;
     };
 
     GameState_t& getGameState();

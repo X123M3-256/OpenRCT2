@@ -838,5 +838,207 @@
     },
     {
         "path": "icons/rotate_view_anti-clockwise.png"
+    },
+    {
+        "path": "particle/star1.png",
+        "x": 0,
+        "y": 0
+    },
+    {
+        "path": "particle/star2.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star3.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star4.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star5.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star6.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star7.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star8.png",
+        "x": -4,
+        "y": -4
+    },
+
+
+    {
+        "path": "particle/star1.png",
+        "x": 0,
+        "y": 0
+    },
+    {
+        "path": "particle/star2.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star3.png",
+        "x": -2,
+        "y": -1
+    },
+    {
+        "path": "particle/star4.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star5.png",
+        "x": -3,
+        "y": -2
+    },
+    {
+        "path": "particle/star6.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star7.png",
+        "x": -4,
+        "y": -3
+    },
+    {
+        "path": "particle/star8.png",
+        "x": -4,
+        "y": -4
+    },
+    {
+        "path": "particle/star1.png",
+        "x": 0,
+        "y": 0
+    },
+    {
+        "path": "particle/star2.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star3.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star4.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star5.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star6.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star7.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star8.png",
+        "x": -4,
+        "y": -4
+    },
+    {
+        "path": "particle/star1.png",
+        "x": 0,
+        "y": 0
+    },
+    {
+        "path": "particle/star2.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star3.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star4.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star5.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star6.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star7.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star8.png",
+        "x": -4,
+        "y": -4
+    },
+    {
+        "path": "particle/star1.png",
+        "x": 0,
+        "y": 0
+    },
+    {
+        "path": "particle/star2.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star3.png",
+        "x": -1,
+        "y": -1
+    },
+    {
+        "path": "particle/star4.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star5.png",
+        "x": -2,
+        "y": -2
+    },
+    {
+        "path": "particle/star6.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star7.png",
+        "x": -3,
+        "y": -3
+    },
+    {
+        "path": "particle/star8.png",
+        "x": -4,
+        "y": -4
     }
 ]

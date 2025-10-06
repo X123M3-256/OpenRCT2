@@ -449,6 +449,7 @@ void ScriptEngine::Initialise()
     ScPeep::Register(ctx);
     ScGuest::Register(ctx);
     ScThought::Register(ctx);
+    ScEffect::Register(ctx);
     #ifndef DISABLE_NETWORK
     ScSocket::Register(ctx);
     ScListener::Register(ctx);

@@ -312,6 +312,7 @@ namespace OpenRCT2
         ContextBroadcastIntent(&restoreProvisionalIntent);
         VehicleUpdateAll();
         gameState.entities.UpdateAllMiscEntities();
+        gameState.particles.Update();
         Ride::updateAll();
 
         if (!isInEditorMode())

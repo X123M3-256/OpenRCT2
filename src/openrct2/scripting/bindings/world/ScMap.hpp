@@ -14,6 +14,7 @@
     #include "../../Duktape.hpp"
     #include "../ride/ScRide.hpp"
     #include "../ride/ScTrackIterator.h"
+    #include "../particle/ScEffect.hpp"
     #include "../world/ScTile.hpp"
 
 namespace OpenRCT2::Scripting
@@ -45,6 +46,10 @@ namespace OpenRCT2::Scripting
         std::vector<DukValue> getAllEntitiesOnTile(const std::string& type, const DukValue& tilePos) const;
 
         DukValue createEntity(const std::string& type, const DukValue& initializer);
+
+        DukValue createParticle(uint8_t colour,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t vel_x,int32_t vel_y,int32_t vel_z,const DukValue& effectDuk);
+
+        DukValue createEffect(const DukValue& initializer);
 
         DukValue getTrackIterator(const DukValue& position, int32_t elementIndex) const;
 

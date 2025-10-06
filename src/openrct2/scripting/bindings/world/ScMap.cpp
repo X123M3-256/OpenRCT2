@@ -426,6 +426,101 @@ namespace OpenRCT2::Scripting
         return res;
     }
 
+
+    DukValue ScMap::createParticle(uint8_t colour,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t vel_x,int32_t vel_y,int32_t vel_z,const DukValue& effectDuk)
+    {
+    uint16_t id = FromDuk<uint16_t>(effectDuk["id"]);
+    Effect* effect=getGameState().particles.GetEffect(EffectId::FromUnderlying(id));
+    //TODO randomize lifetime
+    bool success=getGameState().particles.CreateParticle(0,colour,effect->lifetimeMin,pos_x<<11,pos_y<<11,pos_z*1672,vel_x,vel_y,vel_z,effect->id);
+    return ToDuk(_context,success);
+    }
+
+
+    static Effect* CreateEffectFromDukValue(const DukValue& initializer)
+    {
+    Effect* effect=getGameState().particles.CreateEffect();
+        if (effect == nullptr)return nullptr;
+    effect->flags=0;
+        if(AsOrDefault(initializer["fixed"],0))effect->flags|=EFFECT_STATIC;
+        if(AsOrDefault(initializer["inheritColour"],0))effect->flags|=EFFECT_INHERIT_COLOUR;
+        if(AsOrDefault(initializer["randomizeColour"],0))effect->flags|=EFFECT_RANDOMIZE_COLOUR;
+    effect->colours[0]=AsOrDefault(initializer["colour"],0);
+    effect->spawnRate=AsOrDefault(initializer["spawnRate"],0);
+    effect->mass=AsOrDefault(initializer["mass"],256);
+    //TODO check that min is not greater than max
+    effect->lifetimeMin=AsOrDefault(initializer["lifetimeMin"],0);
+    effect->lifetimeMax=AsOrDefault(initializer["lifetimeMax"],0);
+        if(effect->lifetimeMax==0)
+        {    
+        effect->lifetimeMin=AsOrDefault(initializer["lifetime"],0);
+        effect->lifetimeMax=effect->lifetimeMin;
+        }
+    effect->startTime=AsOrDefault(initializer["startTime"],0);
+    effect->endTime=AsOrDefault(initializer["endTime"],255);
+    effect->startSize=AsOrDefault(initializer["startSize"],4);
+    effect->endSize=AsOrDefault(initializer["endSize"],4);
+    effect->relative=AsOrDefault(initializer["relative"],255);
+    effect->brownianMotion=AsOrDefault(initializer["brownianMotion"],0);
+    //TODO check that min is not greater than max
+    effect->sphereMin=AsOrDefault(initializer["sphereMin"],0);
+    effect->sphereMax=AsOrDefault(initializer["sphereMax"],0);
+        if(effect->sphereMax==0)
+        {    
+        effect->sphereMin=AsOrDefault(initializer["sphere"],0);
+        effect->sphereMax=effect->sphereMin;
+        }
+
+    //Load children
+    DukValue children=initializer["children"];
+            if(children.is_array())
+            {
+	    std::vector<DukValue> childrenArray = children.as_array();
+            Effect* prevChild=nullptr;
+                for (size_t i=0;i<childrenArray.size();i++)
+                {
+		DukValue item=childrenArray[i];
+                    if (item.type() == DukValue::Type::OBJECT)
+                    {
+                    Effect* child=CreateEffectFromDukValue(item);
+                        if(child == nullptr)
+                        {
+                        //TODO raise error and free already created effects if it fails
+                        printf("Failing because child failed to be created\n");
+			return nullptr;
+                        }
+			if(prevChild==nullptr)effect->children=child;
+			else
+                        {
+                        prevChild->next=child;
+                        }
+                    prevChild=child;
+                    }
+		    else
+                    {
+                    //TODO raise error and free already created effects if it fails
+                    printf("Failing because children contains an element which is not an object\n");
+                    return nullptr;
+                    }
+                }
+            }
+    return effect;
+    }
+
+    DukValue ScMap::createEffect(const DukValue& initializer)
+    {
+        DukValue res;
+	Effect* effect=CreateEffectFromDukValue(initializer);
+        if (effect == nullptr)
+        {
+            return ToDuk(_context, undefined);
+        }
+        else
+        {
+            return GetObjectAsDukValue(_context, std::make_shared<ScEffect>(effect->id));
+        }
+    }
+
     DukValue ScMap::getTrackIterator(const DukValue& dukPosition, int32_t elementIndex) const
     {
         auto position = FromDuk<CoordsXY>(dukPosition);
@@ -448,6 +543,8 @@ namespace OpenRCT2::Scripting
         dukglue_register_method(ctx, &ScMap::getAllEntities, "getAllEntities");
         dukglue_register_method(ctx, &ScMap::getAllEntitiesOnTile, "getAllEntitiesOnTile");
         dukglue_register_method(ctx, &ScMap::createEntity, "createEntity");
+        dukglue_register_method(ctx, &ScMap::createParticle, "createParticle");
+        dukglue_register_method(ctx, &ScMap::createEffect, "createEffect");
         dukglue_register_method(ctx, &ScMap::getTrackIterator, "getTrackIterator");
     }
 
@@ -494,6 +591,14 @@ namespace OpenRCT2::Scripting
                 return GetObjectAsDukValue(_context, std::make_shared<ScEntity>(spriteId));
         }
     }
+
+
+
+
+
+
+
+
 
 } // namespace OpenRCT2::Scripting
 
