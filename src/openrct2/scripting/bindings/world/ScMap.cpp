@@ -426,27 +426,32 @@ namespace OpenRCT2::Scripting
         return res;
     }
 
-
-    DukValue ScMap::createParticle(uint8_t colour,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t vel_x,int32_t vel_y,int32_t vel_z,const DukValue& effectDuk)
+    DukValue ScMap::runEffect(uint8_t colour,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t tan_x,int32_t tan_y,int32_t tan_z,const DukValue& effectDuk)
     {
     uint16_t id = FromDuk<uint16_t>(effectDuk["id"]);
     Effect* effect=getGameState().particles.GetEffect(EffectId::FromUnderlying(id));
-    //TODO randomize lifetime
-    bool success=getGameState().particles.CreateParticle(0,colour,effect->lifetimeMin,pos_x<<11,pos_y<<11,pos_z*1672,vel_x,vel_y,vel_z,effect->id);
-    return ToDuk(_context,success);
+    bool result=getGameState().particles.RunEffect(colour,Vec32(pos_x<<11,pos_y<<11,pos_z*1672),Vec32(tan_x,tan_y,tan_z).Normalize(),Vec32(1,0,0),effect->id);
+    return ToDuk(_context,result);
     }
-
 
     static Effect* CreateEffectFromDukValue(const DukValue& initializer)
     {
+    printf("Creating effect\n");
     Effect* effect=getGameState().particles.CreateEffect();
         if (effect == nullptr)return nullptr;
+    printf("Got ID %d\n",effect->id.ToUnderlying());
     effect->flags=0;
         if(AsOrDefault(initializer["fixed"],0))effect->flags|=EFFECT_STATIC;
         if(AsOrDefault(initializer["inheritColour"],0))effect->flags|=EFFECT_INHERIT_COLOUR;
         if(AsOrDefault(initializer["randomizeColour"],0))effect->flags|=EFFECT_RANDOMIZE_COLOUR;
     effect->colours[0]=AsOrDefault(initializer["colour"],0);
     effect->spawnRate=AsOrDefault(initializer["spawnRate"],0);
+        if(effect->spawnRate==0)
+        {
+        effect->flags|=EFFECT_HAS_COUNT;
+        effect->spawnRate=AsOrDefault(initializer["count"],1);
+        }
+    effect->gravity=AsOrDefault(initializer["gravity"],7793);
     effect->mass=AsOrDefault(initializer["mass"],256);
     //TODO check that min is not greater than max
     effect->lifetimeMin=AsOrDefault(initializer["lifetimeMin"],0);
@@ -462,6 +467,14 @@ namespace OpenRCT2::Scripting
     effect->endSize=AsOrDefault(initializer["endSize"],4);
     effect->relative=AsOrDefault(initializer["relative"],255);
     effect->brownianMotion=AsOrDefault(initializer["brownianMotion"],0);
+    //TODO check that min is not greater than max
+    effect->velocityMin=AsOrDefault(initializer["velocityMin"],0);
+    effect->velocityMax=AsOrDefault(initializer["velocityMax"],0);
+        if(effect->velocityMax==0)
+        {    
+        effect->velocityMin=AsOrDefault(initializer["velocity"],0);
+        effect->velocityMax=effect->velocityMin;
+        }
     //TODO check that min is not greater than max
     effect->sphereMin=AsOrDefault(initializer["sphereMin"],0);
     effect->sphereMax=AsOrDefault(initializer["sphereMax"],0);
@@ -492,7 +505,14 @@ namespace OpenRCT2::Scripting
 			if(prevChild==nullptr)effect->children=child;
 			else
                         {
+				if(prevChild==child)
+				{
+				printf("Epic fail\n");
+				exit(0);
+				return nullptr;
+				}
                         prevChild->next=child;
+    			printf("Set effect %d next pointer to %d\n",prevChild->id.ToUnderlying(),child->id.ToUnderlying());
                         }
                     prevChild=child;
                     }
@@ -504,6 +524,7 @@ namespace OpenRCT2::Scripting
                     }
                 }
             }
+    printf("Created effect with ID %d\n",effect->id.ToUnderlying());
     return effect;
     }
 
@@ -543,8 +564,8 @@ namespace OpenRCT2::Scripting
         dukglue_register_method(ctx, &ScMap::getAllEntities, "getAllEntities");
         dukglue_register_method(ctx, &ScMap::getAllEntitiesOnTile, "getAllEntitiesOnTile");
         dukglue_register_method(ctx, &ScMap::createEntity, "createEntity");
-        dukglue_register_method(ctx, &ScMap::createParticle, "createParticle");
         dukglue_register_method(ctx, &ScMap::createEffect, "createEffect");
+        dukglue_register_method(ctx, &ScMap::runEffect, "runEffect");
         dukglue_register_method(ctx, &ScMap::getTrackIterator, "getTrackIterator");
     }
 

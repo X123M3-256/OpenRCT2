@@ -25,6 +25,9 @@ EFFECT_FREE=1,
 EFFECT_STATIC=2,
 EFFECT_INHERIT_COLOUR=4,
 EFFECT_RANDOMIZE_COLOUR=8,
+EFFECT_HAS_COUNT=16,
+EFFECT_REQUIRES_TANGENT=32,
+EFFECT_REQUIRES_NORMAL=64
 };
 
 struct Vec32
@@ -37,6 +40,7 @@ public:
     Vec32(int32_t x,int32_t y,int32_t z);
     Vec32 Scale(int32_t num,int32_t denom);
     Vec32 Add(Vec32 v);
+    Vec32 Normalize();
 };
 
 namespace OpenRCT2
@@ -45,42 +49,43 @@ const uint32_t kMaxParticles=65535;
 const uint32_t kMaxEffects=1024;
 constexpr const uint32_t kParticleSpatialIndexSize = (kMaximumMapSizeTechnical * kMaximumMapSizeTechnical);
 
-    struct Effect
+    struct Effect //Total size 72 bytes
     {
     EffectId id;
     uint16_t flags;
-    uint8_t colours[8];
-    uint8_t num_colours;
     uint8_t type;
+    uint8_t num_colours;
+    uint8_t colours[8];
+    uint16_t mass; //16 bytes
+
+    uint16_t startTime;
+    uint16_t endTime;
     uint16_t lifetimeMin;
-    uint16_t lifetimeMax;//16 bytes
-
+    uint16_t lifetimeMax;
     uint16_t spawnRate;
-
-    uint8_t startTime;
-    uint8_t endTime;
+    uint16_t gravity;
+    uint16_t relative;
     uint8_t startSize;
-    uint8_t endSize;
-    uint16_t mass;
-    uint16_t gravity; //8 bytes
+    uint8_t endSize; //16 bytes
 
-    int16_t velocityMin;
-    int16_t velocityMax;
+    int32_t velocityMin;
+    int32_t velocityMax; //8 bytes
   
     uint16_t sphereMin;
     uint16_t sphereMax;
-    uint16_t circleMin;
-    uint16_t circleMax;//8 bytes
-
-    uint8_t relative;
-    uint8_t brownianMotion;
+    int16_t azumithMin;
+    int16_t azumithMax;
+    int16_t elevationMin;
+    int16_t elevationMax;
+    uint8_t elevationJitter;
+    uint8_t azumithJitter;
+    uint16_t brownianMotion; //16 bytes
 
     Effect* children;
-    Effect* next;
+    Effect* next; //16 bytes
     };
 
-
-    struct Particle
+    struct Particle //Total size 40 bytes
     {
         uint8_t flags;
         uint8_t type;
@@ -102,14 +107,15 @@ constexpr const uint32_t kParticleSpatialIndexSize = (kMaximumMapSizeTechnical *
         std::array<Particle, kMaxParticles> particles;
         std::array<uint16_t, kParticleSpatialIndexSize> gParticleSpatialIndex;
         std::array<Effect, kMaxEffects> effects;
-        void CreateChildParticle(Particle& particle,Vec32 pos,Effect& effect);
+        bool CreateParticle(uint16_t type,uint8_t colour,uint8_t frame,uint16_t lifetime,Vec32 pos,Vec32 vel,Effect& effect);
+        void CreateParticleWithEffect(uint8_t color,Vec32 pos,Vec32 vel,Vec32 tangent,Vec32 normal,Effect& effect);
         void KillParticle(uint16_t i);
         void RebuildSpatialIndex();
     public:
 	ParticleList();
-        bool CreateParticle(uint16_t type,uint16_t colour,uint16_t lifetime,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t vel_x,int32_t vel_y,int32_t vel_z,EffectId effect);
         Effect* CreateEffect();
         Effect* GetEffect(EffectId);
+        bool RunEffect(uint8_t color,Vec32 pos,Vec32 tangent,Vec32 normal,EffectId);
 	void Update();
 	void ParticlePaintSetup(PaintSession& session, const CoordsXY& pos);
     };

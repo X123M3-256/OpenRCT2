@@ -25,7 +25,6 @@
 
 using namespace OpenRCT2;
 
-
 const int32_t numSpherePoints=2066;
 static int16_t spherePoints[2066][3]={
 {451,32762,451},{1354,32737,451},{2256,32687,451},{3155,32613,451},{4053,32513,451},{4947,32389,451},{5838,32241,451},{6724,32068,451},
@@ -288,13 +287,10 @@ static int16_t spherePoints[2066][3]={
 {2231,2231,32616},{2812,1433,32616},{3117,494,32616},{440,2212,32690},{1253,1876,32690},{1876,1253,32690},{2212,440,32690},{518,1251,32740},
 {1251,518,32740},{319,319,32765}};
 
-
-
-
-
 enum
 {
-PARTICLE_DEAD=1
+PARTICLE_DEAD=1,
+PARTICLE_NEW=2
 };
 
 
@@ -341,11 +337,42 @@ uint16_t index=id.ToUnderlying();
 return &(effects[index]);
 }
 
+bool ParticleList::RunEffect(uint8_t colour,Vec32 pos,Vec32 tangent,Vec32 normal,EffectId id)
+{
+printf("Running effect ID %d\n",id.ToUnderlying());
+//Check effect ID is valid
+Effect* effect=GetEffect(id);
+	if(effect==nullptr)return false;
+CreateParticleWithEffect(colour,pos,Vec32(0,0,0),tangent,normal,*effect);
+RebuildSpatialIndex();
+return true;
+}
 
 inline int32_t scale_rational(int32_t in,int32_t num,int32_t denom)
 {
 int64_t x=static_cast<int64_t>(in)*num;
 return static_cast<int32_t>(x/denom);
+}
+
+
+//Compute integer square root by binary search
+static uint32_t isqrt(uint64_t n)
+{
+uint64_t x=0x80000000; //Start x halfway
+uint64_t bit=0x80000000;
+    while(1)
+    {
+        if(x*x>n)
+        {
+        x^=bit;
+        }
+     bit>>=1;
+    	if(bit==0)
+	{
+	return static_cast<uint32_t>(x);
+	}
+    x|=bit;
+    }
 }
 
 
@@ -375,7 +402,32 @@ Vec32 res={x+v.x,y+v.y,z+v.z};
 return res;
 }
 
+Vec32 Vec32::Normalize()
+{
+int64_t ix=static_cast<int64_t>(x)>>1;
+int64_t iy=static_cast<int64_t>(y)>>1;
+int64_t iz=static_cast<int64_t>(z)>>1;
+//printf("Input x %ld y %ld z %ld\n",x,y,z);
+//printf("Float x %.2f y %.2f z %.2f\n",x/32768.0,y/32768.0,z/32768.0);
+uint64_t norm_sqr=ix*ix+iy*iy+iz*iz;
+uint32_t bit_shift=0;
 
+//printf("Norm sqr %ld\n",norm_sqr);
+//printf("Float %.2f\n",norm_sqr/(32768.0*32768.0));
+
+
+//Check if length of the vector is less than 1 - in that case, bit shift must be applied to avoid loss of precision
+	if(norm_sqr<1073741824)bit_shift=15;
+
+//printf("Bit shift %d\n",bit_shift);
+
+uint32_t root=isqrt(norm_sqr<<(2*bit_shift));
+
+//printf("Root %d\n",root);
+//printf("Float %.2f\n",bit_shift?(root/(32768.0*32768.0)):(root/32768.0));
+
+return Scale(32768<<bit_shift,root);
+}
 
 static CoordsXYZ ParticleLocation(Particle& particle)
 {
@@ -383,13 +435,12 @@ const CoordsXYZ particlePos = {particle.position.x>>11,particle.position.y>>11,p
 return particlePos;
 }
 
-//Creates new particle somewhere in the list
-bool ParticleList::CreateParticle(uint16_t type,uint16_t colour,uint16_t lifetime,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t vel_x,int32_t vel_y,int32_t vel_z,EffectId effectId)
-{
-//Check effect ID is valid
 
-Effect* effect=GetEffect(effectId);
-	if(effect==nullptr)return false;
+
+
+//Creates new particle somewhere in the list
+bool ParticleList::CreateParticle(uint16_t type,uint8_t colour,uint8_t frame,uint16_t lifetime,Vec32 pos,Vec32 vel,Effect& effect)
+{
 
 Particle* particle=nullptr;
 	//If there is free space at the end of the particle list, add it there to avoid searching for free index
@@ -411,19 +462,15 @@ Particle* particle=nullptr;
 //If no free space, fail
 	if(particle==nullptr)return false;
 //Write new particle
-particle->flags=0;
+particle->flags=PARTICLE_NEW;
 particle->type=type;
 particle->lifetime=lifetime;
 particle->ticks=0;
+particle->frame=frame;
 particle->colour=colour;
-particle->position=Vec32(pos_x,pos_y,pos_z);
-particle->velocity=Vec32(vel_x,vel_y,vel_z);
-particle->effect=effect;
-if(particle->effect==nullptr)
-{
-printf("Creating particle with null effect\n");
-exit(0);
-}
+particle->position=pos;
+particle->velocity=vel;
+particle->effect=&effect;
 //Mark particle list dirty
 //ParticleList::RebuildSpatialIndex();
 particleListDirty=true;
@@ -440,45 +487,105 @@ particles[i].flags|=PARTICLE_DEAD;
 	if(i<firstFreeIndex)firstFreeIndex=i;
 }
 
-
-
-
-
-void ParticleList::CreateChildParticle(Particle& particle,Vec32 pos,Effect& effect)
+void ParticleList::CreateParticleWithEffect(uint8_t colour,Vec32 position,Vec32 velocity,Vec32 tangent,Vec32 normal,Effect& effect)
 {
-//Determine colour of child particle
-uint8_t colour=effect.colours[0];
-if(effect.flags&EFFECT_INHERIT_COLOUR)colour=particle.colour;
+//Compute child colour
+if(!(effect.flags&EFFECT_INHERIT_COLOUR))colour=effect.colours[0];
+
+//Compute child lifetime
+uint16_t lifetime=effect.lifetimeMin;
+	if(effect.lifetimeMin!=effect.lifetimeMax)lifetime+=ScenarioRandMax(1+effect.lifetimeMax-effect.lifetimeMin);
+
+//Compute initial frame
+uint8_t frame=effect.startSize;
 
 //Compute child velocity
-Vec32 vel=particle.velocity.Scale(255,particle.effect->relative);
+velocity=velocity.Scale(effect.relative,255);
 
-//TODO randomize sphere
+	if(effect.velocityMax!=0)
+	{
+	int32_t velocityMag=effect.velocityMin;
+		if(effect.velocityMin!=effect.velocityMax)velocityMag+=ScenarioRandMax(1+effect.velocityMax-effect.velocityMin);
+	velocity=velocity.Add(tangent.Scale(velocityMag,128));
+	}
+
 	if(effect.sphereMax!=0)
 	{
+	//Compute random spherical velocity vector
+	uint16_t sphereMag=effect.sphereMin;
+		if(effect.sphereMin!=effect.sphereMax)sphereMag+=ScenarioRandMax(1+effect.sphereMax-effect.sphereMin);
 	uint32_t n=ScenarioRandMax(numSpherePoints);
 	uint32_t octant=ScenarioRandMax(9);
 	Vec32 sphere=Vec32(spherePoints[n][0],spherePoints[n][1],spherePoints[n][2]);
 		if(octant&1)sphere.x*=-1;
 		if(octant&2)sphere.y*=-1;
 		if(octant&4)sphere.z*=-1;
-	vel=vel.Add(sphere.Scale(effect.sphereMax,128));
+	velocity=velocity.Add(sphere.Scale(sphereMag,128));
 	}
 
-//Spawn child particle
+//Spawn particle TODO don't do this if lifetime is zero
+CreateParticle(0,colour,frame,lifetime,position,velocity,effect);
 
-//TODO randomize lifetime
-uint16_t lifetime=effect.lifetimeMin+ScenarioRandMax(1+effect.lifetimeMax-effect.lifetimeMin);
-CreateParticle(0,colour,lifetime,pos.x,pos.y,pos.z,vel.x,vel.y,vel.z,effect.id);
+//Spawn any children which are due to spawn immediately
+bool tangent_computed=false;
+Effect* childEffect=effect.children;
+    while(childEffect!=nullptr)
+    {
+        if(childEffect->startTime==0)
+	{
+        uint32_t countToSpawn=1;
+            if(childEffect->startTime==childEffect->endTime)countToSpawn=childEffect->spawnRate;
+    
+    
+            for(uint32_t j=0;j<countToSpawn;j++)
+            {
+            //Spawn child particle
+                if(!tangent_computed&&childEffect->velocityMax!=0)
+        	    {
+        	        if(velocity.x!=0&&velocity.y!=0&&velocity.z!=0)tangent=velocity.Normalize();
+        	    tangent_computed=true;
+        	    }
+            CreateParticleWithEffect(colour,position,velocity,tangent,normal,*childEffect);
+            }
+        }
+    childEffect=childEffect->next;
+    }
 }
 
 
 void ParticleList::Update()
 {
-    for (uint32_t i=0;i<numParticles;i++)
+/*
+printf("Printing effect list\n");
+   for(uint32_t i=0;i<=kMaxEffects;i++)
+   {
+       if(!(effects[i].flags&EFFECT_FREE))
+       {
+           if(effects[i].children==nullptr)
+           {
+               if(effects[i].next==nullptr)printf("Effect ID %d null Children null Next null\n",i);
+               else printf("Effect ID %d Children null Next %d\n",i,effects[i].next->id.ToUnderlying());
+           }
+           else
+           {
+               if(effects[i].next==nullptr)printf("Effect ID %d Children %d Next null\n",i,effects[i].children->id.ToUnderlying());
+               else printf("Effect ID %d Children %d Next %d\n",i,effects[i].children->id.ToUnderlying(),effects[i].next->id.ToUnderlying());
+           }
+       }
+   }*/
+uint32_t n=numParticles;
+    for (uint32_t i=0;i<n;i++)
     {
     Particle& particle=particles[i];
+    //If particle has just been added this tick, it should not be updated until the next tick
+	if(particle.flags&PARTICLE_NEW)continue;
 
+    //Check if particles lifetime has expired
+        if(particle.ticks+1>=particle.lifetime)
+	{
+	KillParticle(i);
+	    if(particle.ticks>=particle.lifetime)continue;//Needed if particle has a lifetime of zero TODO is there any other case where this happens?
+	}
 
     //Invalidate old position
     const CoordsXYZ particlePosOld = ParticleLocation(particle);
@@ -493,7 +600,7 @@ void ParticleList::Update()
     //Calculate new velocity update
         if(!(particle.effect->flags&EFFECT_STATIC))
         {
-        particle.velocity.z-=7793;
+        particle.velocity.z-=particle.effect->gravity;
         
         uint16_t mass=particle.effect->mass;
            //Mass of 0 actually corresponds to a mass of infinity - i.e zero drag effect
@@ -503,69 +610,92 @@ void ParticleList::Update()
            particle.velocity=particle.velocity.Scale(mass-1,mass);
            particle.velocity=particle.velocity.Add(wind.Scale(1,mass));
            }
-
-           if(particle.effect->brownianMotion!=0)
-           {
-           particle.position.x+=particle.effect->brownianMotion*(ScenarioRandMax(33)-16);
-           particle.position.y+=particle.effect->brownianMotion*(ScenarioRandMax(33)-16);
-           particle.position.z+=particle.effect->brownianMotion*(ScenarioRandMax(33)-16);
-           }
         }
 
-
     //Calculate new size
-    particle.frame=particle.effect->startSize+((particle.effect->endSize-particle.effect->startSize)*particle.ticks+particle.lifetime/2)/particle.lifetime;
+    particle.frame=particle.effect->startSize;
+        if(particle.lifetime!=0)particle.frame+=((particle.effect->endSize-particle.effect->startSize)*particle.ticks+particle.lifetime/2)/particle.lifetime;
 
+    Vec32 tangent=Vec32(0,0,1);
+    Vec32 normal=Vec32(1,0,0);
+    bool tangent_computed=false;
 
     //Spawn children
     Effect* childEffect=particle.effect->children;
         while(childEffect!=nullptr)
         {
-            if(particle.ticks>=childEffect->startTime&&particle.ticks<=childEffect->endTime)
+        //We divide each tick into 32768 sub-ticks, in order to permit particles to spawn more than one particle per tick	
+	const int32_t subTicksPerTick=32768;
+	const int32_t subTicksPerSpawnRate=subTicksPerTick/256;
+	int32_t startTime=particle.lifetime*childEffect->startTime*subTicksPerSpawnRate;
+	int32_t endTime=particle.lifetime*childEffect->endTime*subTicksPerSpawnRate;
+        int32_t t=particle.ticks*subTicksPerTick-startTime;
+            if(t+subTicksPerTick>=0&&t<=endTime-startTime&&childEffect->spawnRate!=0&&(!(childEffect->flags&EFFECT_HAS_COUNT)||childEffect->spawnRate!=1||startTime==endTime))
             {
-            //If start and end times are the same then spawnRate is interpreted as a count of particles to spawn
-            //TODO make interpretation of spawnRate into a flag so it can be a count or a rate
-                if(childEffect->startTime==childEffect->endTime)
+            //If start and end times are the same then spawnRate is interpreted as a count of particles to spawn regardless of HAS_COUNT flag
+            uint32_t countToSpawn=childEffect->spawnRate;
+            bool noInterp=startTime==endTime;
+            int32_t subTicksPerSpawn=0;
+            uint32_t curSpawnCount=0;
+
+            //Calculate spawn rate and the number of children previously spawned. If start time and end time are equal these values cannot be computed, but also aren't needed
+                if(startTime!=endTime)
                 {
-	            for(int j=0;j<childEffect->spawnRate;j++)
-                    {
-                    CreateChildParticle(particle,particle.position,*childEffect);
-                    }
+                subTicksPerSpawn=childEffect->spawnRate*subTicksPerSpawnRate;
+                    if(childEffect->flags&EFFECT_HAS_COUNT)subTicksPerSpawn=(endTime-startTime)/(childEffect->spawnRate-1);
+                    if(subTicksPerSpawn!=0)
+                    { 
+                    //Number of children which this particle has already spawned
+                    curSpawnCount=t/subTicksPerSpawn;
+                        if(t<0&&t%subTicksPerSpawn!=0)curSpawnCount--;//C++ rounds towards zero so need to correct for negative t
+                    //Number of children which should have been spawned upon completion of this tick
+                    uint32_t nextSpawnCount=(t+subTicksPerTick)/subTicksPerSpawn;
+                        if((childEffect->flags&EFFECT_HAS_COUNT)&&nextSpawnCount+1>childEffect->spawnRate)nextSpawnCount=childEffect->spawnRate-1;
+                    //Number of children to spawn this tick
+                    countToSpawn=nextSpawnCount-curSpawnCount;
+                    }else noInterp=true;
                 }
-                else if(particle.ticks<particle.lifetime)
-                {
-                //We divide each tick into 32 sub-ticks, in order to permit particles to spawn more than one particle per tick	
-                int t=(particle.ticks-childEffect->startTime)*256;
 
-	        int subTicksPerSpawn=childEffect->spawnRate;
-                    if(subTicksPerSpawn==0)continue;
+	        for(uint32_t j=0;j<countToSpawn;j++)
+       	        {
+                Vec32 pos=particle.position;
+                    //Interpolate between current and next position
+                    if(noInterp)
+                    {
+                    //Determine sub-tick at which this particle should spawn
+                    int32_t sub_tick=(curSpawnCount+j+1)*subTicksPerSpawn-t;
+                    //Determine time at which this particle spawns (relative to startTime)
+                    int32_t sub_t=t+sub_tick;
+	        	if(sub_t<0||sub_t>endTime-startTime)continue;
 
-                //Number of children which this particle has already spawned
-	        int curSpawnCount=(t+subTicksPerSpawn-1)/subTicksPerSpawn;
-                //Number of children which should have been spawned upon completion of this tick
-	        int nextSpawnCount=(t+subTicksPerSpawn+255)/subTicksPerSpawn;
-                //Number of children to spawn this tick
-                int countToSpawn=nextSpawnCount-curSpawnCount;
-
-	            for(int j=0;j<countToSpawn;j++)
-       	            {
-                    //Determine sub-tick at which this child should spawn
-                    uint8_t sub_tick=(curSpawnCount+j)*subTicksPerSpawn-t;
                     //Determine position of parent at spawn time
-                    Vec32 pos=particle.position.Add(particle.velocity.Scale(sub_tick,10240));
-                    //SpawnChildParticle
-                    CreateChildParticle(particle,pos,*childEffect);
+                    pos=pos.Add(particle.velocity.Scale(sub_tick,40*subTicksPerTick));
                     }
+                //Spawn child particle
+                    if(!tangent_computed&&childEffect->velocityMax!=0)
+		    {
+		        if(particle.velocity.x!=0&&particle.velocity.y!=0&&particle.velocity.z!=0)tangent=particle.velocity.Normalize();
+		    tangent_computed=true;
+		    }
+                CreateParticleWithEffect(particle.colour,pos,particle.velocity,tangent,normal,*childEffect);
                 }
             }
         childEffect=childEffect->next;
         }
-
     //Position update
-    particle.position=particle.position.Add(particle.velocity.Scale(1,40));
+        if(!(particle.effect->flags&EFFECT_STATIC))
+        {
+        particle.position=particle.position.Add(particle.velocity.Scale(1,40));
+
+            if(particle.effect->brownianMotion!=0)
+            {
+            particle.position.x+=particle.effect->brownianMotion*(ScenarioRandMax(33)-16);
+            particle.position.y+=particle.effect->brownianMotion*(ScenarioRandMax(33)-16);
+            particle.position.z+=particle.effect->brownianMotion*(ScenarioRandMax(33)-16);
+            }
+        }
 
     particle.ticks++;
-    if(particle.ticks>particle.lifetime)KillParticle(i);
 
 
     // Check collision with land / water TODO do this in separate pass it can be made more efficient
@@ -627,6 +757,7 @@ uint32_t i=0;
     //printf("Adding on tile %d %d\n",tileX,tileY);
         do
 	{
+	particles[i].flags&=~PARTICLE_NEW;
 	i++;
 	}while(i<particles.size()&&!(particles[i].flags&PARTICLE_DEAD)&&particles[i].position.x>>16==tileX&&particles[i].position.y>>16==tileY);
     }

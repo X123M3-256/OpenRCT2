@@ -47,9 +47,9 @@ namespace OpenRCT2::Scripting
 
         DukValue createEntity(const std::string& type, const DukValue& initializer);
 
-        DukValue createParticle(uint8_t colour,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t vel_x,int32_t vel_y,int32_t vel_z,const DukValue& effectDuk);
-
         DukValue createEffect(const DukValue& initializer);
+
+        DukValue runEffect(uint8_t colour,int32_t pos_x,int32_t pos_y,int32_t pos_z,int32_t tangent_x,int32_t tangent_y,int32_t tangent_z,const DukValue& effectDuk);
 
         DukValue getTrackIterator(const DukValue& position, int32_t elementIndex) const;
 
