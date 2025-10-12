@@ -297,20 +297,20 @@ void PaintSessionGenerateRotate(PaintSession& session)
     {
         TileElementPaintSetup(session, mapTile);
         EntityPaintSetup(session, mapTile);
-        getGameState().particles.ParticlePaintSetup(session, mapTile);
+        getGameState().particles.ParticlePaintSetup(session, mapTile,0);
 
         const auto loc1 = mapTile + adjacentTiles[0];
         EntityPaintSetup(session, loc1);
-        getGameState().particles.ParticlePaintSetup(session, loc1);
+        getGameState().particles.ParticlePaintSetup(session, loc1,3);
 
         const auto loc2 = mapTile + adjacentTiles[1];
         TileElementPaintSetup(session, loc2);
         EntityPaintSetup(session, loc2);
-        getGameState().particles.ParticlePaintSetup(session, loc2);
+        getGameState().particles.ParticlePaintSetup(session, loc2,2);
 
         const auto loc3 = mapTile + adjacentTiles[2];
         EntityPaintSetup(session, loc3);
-        getGameState().particles.ParticlePaintSetup(session, loc3);
+        getGameState().particles.ParticlePaintSetup(session, loc3,1);
 
         mapTile += nextVerticalTile;
     }

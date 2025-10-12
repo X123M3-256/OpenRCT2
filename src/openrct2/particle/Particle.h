@@ -10,6 +10,7 @@
 #pragma once
 #include "../paint/Paint.h"
 #include "../Identifiers.h"
+#include "Vector.h"
 
 #include <cstdint>
 
@@ -28,19 +29,6 @@ EFFECT_RANDOMIZE_COLOUR=8,
 EFFECT_HAS_COUNT=16,
 EFFECT_REQUIRES_TANGENT=32,
 EFFECT_REQUIRES_NORMAL=64
-};
-
-struct Vec32
-{
-int32_t x;
-int32_t y;
-int32_t z;
-public:
-    Vec32();
-    Vec32(int32_t x,int32_t y,int32_t z);
-    Vec32 Scale(int32_t num,int32_t denom);
-    Vec32 Add(Vec32 v);
-    Vec32 Normalize();
 };
 
 namespace OpenRCT2
@@ -85,17 +73,18 @@ constexpr const uint32_t kParticleSpatialIndexSize = (kMaximumMapSizeTechnical *
     Effect* next; //16 bytes
     };
 
-    struct Particle //Total size 40 bytes
+    struct Particle //Total size 36 bytes
     {
-        uint8_t flags;
         uint8_t type;
         uint8_t colour;
         uint8_t frame;
+        uint8_t azumith;
+        uint8_t remaps[2];
         uint16_t ticks;
         uint16_t lifetime;
+	EffectId effect;
         Vec32 position;
         Vec32 velocity;
-	Effect* effect;
     };
 
     class ParticleList
@@ -103,21 +92,23 @@ constexpr const uint32_t kParticleSpatialIndexSize = (kMaximumMapSizeTechnical *
     private:
 	uint16_t numParticles;
 	uint16_t firstFreeIndex;
-        bool particleListDirty;
         std::array<Particle, kMaxParticles> particles;
         std::array<uint16_t, kParticleSpatialIndexSize> gParticleSpatialIndex;
         std::array<Effect, kMaxEffects> effects;
-        bool CreateParticle(uint16_t type,uint8_t colour,uint8_t frame,uint16_t lifetime,Vec32 pos,Vec32 vel,Effect& effect);
-        void CreateParticleWithEffect(uint8_t color,Vec32 pos,Vec32 vel,Vec32 tangent,Vec32 normal,Effect& effect);
+        uint16_t CreateParticle(uint16_t type,uint8_t colour,uint8_t frame,uint16_t lifetime,Vec32 pos,Vec32 vel,EffectId effect);
+        uint16_t CreateParticleWithEffect(uint8_t colour,uint32_t ticks,Vec32 position,Vec32 velocity,Vec32 tangent,Vec32 normal,Vec32 binormal,EffectId effect);
+        void UpdateParticle(uint16_t i,uint16_t timestep);
         void KillParticle(uint16_t i);
         void RebuildSpatialIndex();
+        void Invalidate();
+        void DetectCollisions();
     public:
 	ParticleList();
         Effect* CreateEffect();
         Effect* GetEffect(EffectId);
         bool RunEffect(uint8_t color,Vec32 pos,Vec32 tangent,Vec32 normal,EffectId);
 	void Update();
-	void ParticlePaintSetup(PaintSession& session, const CoordsXY& pos);
+	void ParticlePaintSetup(PaintSession& session, const CoordsXY& pos,int8_t side);
     };
 
 } // namespace OpenRCT2

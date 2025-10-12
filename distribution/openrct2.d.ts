@@ -1742,6 +1742,8 @@ declare global {
         getAllEntitiesOnTile(type: "balloon", tilePos: CoordsXY): Balloon[];
         getAllEntitiesOnTile(type: "money_effect", tilePos: CoordsXY): MoneyEffect[];
         createEntity(type: EntityType, initializer: object): Entity;
+        createEffect(initializer: object): Effect;
+        runEffect(initializer: object): boolean;
 
         /**
          * Gets a {@link TrackIterator} for the given track element. This can be used to

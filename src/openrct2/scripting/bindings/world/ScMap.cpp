@@ -430,7 +430,7 @@ namespace OpenRCT2::Scripting
     {
     uint16_t id = FromDuk<uint16_t>(effectDuk["id"]);
     Effect* effect=getGameState().particles.GetEffect(EffectId::FromUnderlying(id));
-    bool result=getGameState().particles.RunEffect(colour,Vec32(pos_x<<11,pos_y<<11,pos_z*1672),Vec32(tan_x,tan_y,tan_z).Normalize(),Vec32(1,0,0),effect->id);
+    bool result=getGameState().particles.RunEffect(colour,Vec32(pos_x<<11,pos_y<<11,pos_z*1672),Vec32(tan_x,tan_y,tan_z),Vec32(1,0,0),effect->id);
     return ToDuk(_context,result);
     }
 
@@ -444,7 +444,25 @@ namespace OpenRCT2::Scripting
         if(AsOrDefault(initializer["fixed"],0))effect->flags|=EFFECT_STATIC;
         if(AsOrDefault(initializer["inheritColour"],0))effect->flags|=EFFECT_INHERIT_COLOUR;
         if(AsOrDefault(initializer["randomizeColour"],0))effect->flags|=EFFECT_RANDOMIZE_COLOUR;
-    effect->colours[0]=AsOrDefault(initializer["colour"],0);
+
+    DukValue colours=initializer["colours"];
+            if(colours.is_array())
+            {
+	    std::vector<DukValue> coloursArray = colours.as_array();
+            int32_t numColours=coloursArray.size();
+                if(numColours>8)numColours=8;
+                for (int32_t i=0;i<numColours;i++)
+                {
+		DukValue item=coloursArray[i];
+                effect->colours[i]=AsOrDefault(item,0);
+                }
+            effect->num_colours=numColours;
+            }
+            else
+            {
+            effect->colours[0]=AsOrDefault(initializer["colour"],0);
+            effect->num_colours=1;
+            }
     effect->spawnRate=AsOrDefault(initializer["spawnRate"],0);
         if(effect->spawnRate==0)
         {
@@ -452,7 +470,9 @@ namespace OpenRCT2::Scripting
         effect->spawnRate=AsOrDefault(initializer["count"],1);
         }
     effect->gravity=AsOrDefault(initializer["gravity"],7793);
+    effect->gravity=(effect->gravity*32)/40;
     effect->mass=AsOrDefault(initializer["mass"],256);
+    effect->mass=(65536/effect->mass)-1;
     //TODO check that min is not greater than max
     effect->lifetimeMin=AsOrDefault(initializer["lifetimeMin"],0);
     effect->lifetimeMax=AsOrDefault(initializer["lifetimeMax"],0);
@@ -475,6 +495,26 @@ namespace OpenRCT2::Scripting
         effect->velocityMin=AsOrDefault(initializer["velocity"],0);
         effect->velocityMax=effect->velocityMin;
         }
+    effect->velocityMin=(effect->velocityMin*32)/40;
+    effect->velocityMax=(effect->velocityMax*32)/40;
+    //TODO check that min is not greater than max
+    effect->azumithMin=AsOrDefault(initializer["azumithMin"],0);
+    effect->azumithMax=AsOrDefault(initializer["azumithMax"],0);
+        if(effect->azumithMax==0)
+        {    
+        effect->azumithMin=AsOrDefault(initializer["azumith"],0);
+        effect->azumithMax=effect->azumithMin;
+        }
+    effect->azumithJitter=AsOrDefault(initializer["azumithJitter"],0);
+    //TODO check that min is not greater than max
+    effect->elevationMin=AsOrDefault(initializer["elevationMin"],0);
+    effect->elevationMax=AsOrDefault(initializer["elevationMax"],0);
+        if(effect->elevationMax==0)
+        {    
+        effect->elevationMin=AsOrDefault(initializer["elevation"],0);
+        effect->elevationMax=effect->elevationMin;
+        }
+    effect->elevationJitter=AsOrDefault(initializer["elevationJitter"],0);
     //TODO check that min is not greater than max
     effect->sphereMin=AsOrDefault(initializer["sphereMin"],0);
     effect->sphereMax=AsOrDefault(initializer["sphereMax"],0);
@@ -483,6 +523,8 @@ namespace OpenRCT2::Scripting
         effect->sphereMin=AsOrDefault(initializer["sphere"],0);
         effect->sphereMax=effect->sphereMin;
         }
+    effect->sphereMin=(effect->sphereMin*32)/40;
+    effect->sphereMax=(effect->sphereMax*32)/40;
 
     //Load children
     DukValue children=initializer["children"];
