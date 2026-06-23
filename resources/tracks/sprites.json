@@ -57449,5 +57449,197 @@
         "path": "track/raptor/brake_gentle_diag_4.png",
         "x": -3,
         "y": -22
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_1_1.png",
+        "x": -32,
+        "y": -11,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_1_2.png",
+        "x": -32,
+        "y": -43,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_1_3.png",
+        "x": -18,
+        "y": -7,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_1_4.png",
+        "x": -16,
+        "y": -2,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_2_1.png",
+        "x": -14,
+        "y": -11,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_2_2.png",
+        "x": -14,
+        "y": -15,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_2_3.png",
+        "x": -16,
+        "y": -42,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_2_4.png",
+        "x": -32,
+        "y": -21,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_3_1.png",
+        "x": -32,
+        "y": -16,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_3_2.png",
+        "x": -19,
+        "y": -21,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_3_3.png",
+        "x": -13,
+        "y": -8,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_3_4.png",
+        "x": -14,
+        "y": -13,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_4_1.png",
+        "x": -15,
+        "y": -56,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_4_2.png",
+        "x": -10,
+        "y": -39,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_4_3.png",
+        "x": -5,
+        "y": -10,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_left_diag_4_4.png",
+        "x": -32,
+        "y": -20,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_1_1.png",
+        "x": -32,
+        "y": -16,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_1_2.png",
+        "x": -32,
+        "y": -21,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_1_3.png",
+        "x": -31,
+        "y": -8,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_1_4.png",
+        "x": -20,
+        "y": -13,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_2_1.png",
+        "x": -14,
+        "y": -10,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_2_2.png",
+        "x": -27,
+        "y": -15,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_2_3.png",
+        "x": -32,
+        "y": -42,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_2_4.png",
+        "x": -32,
+        "y": -21,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_3_1.png",
+        "x": -32,
+        "y": -11,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_3_2.png",
+        "x": -32,
+        "y": -43,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_3_3.png",
+        "x": -10,
+        "y": -7,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_3_4.png",
+        "x": -14,
+        "y": -2,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_4_1.png",
+        "x": -14,
+        "y": -56,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_4_2.png",
+        "x": -32,
+        "y": -39,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_4_3.png",
+        "x": -32,
+        "y": -11,
+        "palette": "keep"
+    },
+    {
+        "path": "track/corkscrew/large_corkscrew_right_diag_4_4.png",
+        "x": -32,
+        "y": -20,
+        "palette": "keep"
     }
 ]
