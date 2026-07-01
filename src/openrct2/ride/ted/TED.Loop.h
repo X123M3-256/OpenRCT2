@@ -1294,6 +1294,87 @@ namespace OpenRCT2::TrackMetadata
         .blockedSegments = kFlyerHalfLoopUninvertedUpSeq0.blockedSegments,
     };
 
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq0 = {
+        .clearance = { 0, 0, 0, 8, { 0b1101, 0 }, {} },
+        .allowedWallEdges = 0b0000,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq1 = {
+        .clearance = { 0, 32, 0, 24, { 0b0100, 0 }, {} },
+        .allowedWallEdges = 0b0110,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq2 = {
+        .clearance = { -32, 0, 0, 24, { 0b0001, 0 }, {} },
+        .allowedWallEdges = 0b1001,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq3 = {
+        .clearance = { -32, 32, 0, 32, { 0b1111, 0 }, {} },
+        .allowedWallEdges = 0b0000,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq4 = {
+        .clearance = { -32, 64, 48, 0, { 0b0100, 0 }, {} },
+        .allowedWallEdges = 0b0110,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq5 = {
+        .clearance = { -64, 32, 48, 0, { 0b0001, 0 }, {} },
+        .allowedWallEdges = 0b1001,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq6 = {
+        .clearance = { -64, 64, 48, 80, { 0b0010, 0 }, {} },
+        .allowedWallEdges = 0b0011,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq7 = {
+        .clearance = { -32, 64, 120, 24, { 0b0100, 0 }, {} },
+        .allowedWallEdges = 0b0110,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq8 = {
+        .clearance = { -64, 32, 120, 24, { 0b0001, 0 }, {} },
+        .allowedWallEdges = 0b1001,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopUpSeq9 = {
+        .clearance = { -32, 32, 120, 24, { 0b1101, 0 }, {} },
+        .allowedWallEdges = 0b0000,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq0 = {
+        .clearance = { 0, 0, 120, 24, { 0b1000, 0 }, {} },
+        .allowedWallEdges = 0b0000,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq1 = {
+        .clearance = { -32, 0, 120, 24, { 0b0001, 0 }, {} },
+        .allowedWallEdges = 0b1001,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq2 = {
+        .clearance = { 0, 32, 120, 24, { 0b0100, 0 }, {} },
+        .allowedWallEdges = 0b0110,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq3 = {
+        .clearance = { -32, 32, 48, 80, { 0b0010, 0 }, {} },
+        .allowedWallEdges = 0b0011,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq4 = {
+        .clearance = { -32, 0, 48, 0, { 0b0001, 0 }, {} },
+        .allowedWallEdges = 0b1001,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq5 = {
+        .clearance = { 0, 32, 48, 0, { 0b0100, 0 }, {} },
+        .allowedWallEdges = 0b0110,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq6 = {
+        .clearance = { 0, 0, 0, 32, { 0b1111, 0 }, {} },
+        .allowedWallEdges = 0b0000,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq7 = {
+        .clearance = { 0, -32, 0, 24, { 0b0001, 0 }, {} },
+        .allowedWallEdges = 0b1001,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq8 = {
+        .clearance = { 32, 0, 0, 24, { 0b0100, 0 }, {} },
+        .allowedWallEdges = 0b0110,
+    };
+    static constexpr SequenceDescriptor kDiagHalfLoopDownSeq9 = {
+        .clearance = { 32, -32, 0, 8, { 0b1000, 0 }, {} },
+        .allowedWallEdges = 0b0000,
+    };
+
     constexpr auto kTEDLeftVerticalLoop = TrackElementDescriptor{
         .description = STR_VERTICAL_LOOP_LEFT,
         .coordinates = { 0, 0, 0, 0, -32, -32 },
@@ -1699,6 +1780,74 @@ namespace OpenRCT2::TrackMetadata
         .sequenceData = { 4,
                           { kFlyerHalfLoopUninvertedDownSeq0, kFlyerHalfLoopUninvertedDownSeq1,
                             kFlyerHalfLoopUninvertedDownSeq2, kFlyerHalfLoopUninvertedDownSeq3 } },
+    };
+
+    constexpr auto kTEDDiagLeftVerticalLoop = TrackElementDescriptor{
+        .description = STR_VERTICAL_LOOP_LEFT,
+        .coordinates = { 0, 0, 0, 0, -32, -32 },
+        .pieceLength = 120,
+        .curveChain = { TrackCurve::none, TrackCurve::none },
+        .priceModifier = 491520,
+        .mirrorElement = TrackElemType::diagRightVerticalLoop,
+        .flags = { TrackElementFlag::normalToInversion, TrackElementFlag::startsAtHalfHeight,
+                   TrackElementFlag::inversionToNormal },
+        .definition = { TrackGroup::verticalLoop, TrackPitch::down25, TrackPitch::up25, TrackRoll::none, TrackRoll::none, -48 },
+        .verticalFactor = EvaluatorVerticalLoop,
+        .sequenceData = { 10,
+                          { kLeftVerticalLoopSeq0, kLeftVerticalLoopSeq1, kLeftVerticalLoopSeq2, kLeftVerticalLoopSeq3,
+                            kLeftVerticalLoopSeq4, kLeftVerticalLoopSeq5, kLeftVerticalLoopSeq6, kLeftVerticalLoopSeq7,
+                            kLeftVerticalLoopSeq8, kLeftVerticalLoopSeq9 } },
+    };
+
+    constexpr auto kTEDDiagRightVerticalLoop = TrackElementDescriptor{
+        .description = STR_VERTICAL_LOOP_RIGHT,
+        .coordinates = { 0, 0, 0, 0, -32, 32 },
+        .pieceLength = 120,
+        .curveChain = { TrackCurve::none, TrackCurve::none },
+        .priceModifier = 491520,
+        .mirrorElement = TrackElemType::diagLeftVerticalLoop,
+        .flags = { TrackElementFlag::normalToInversion, TrackElementFlag::startsAtHalfHeight,
+                   TrackElementFlag::inversionToNormal },
+        .definition = { TrackGroup::verticalLoop, TrackPitch::down25, TrackPitch::up25, TrackRoll::none, TrackRoll::none, -48 },
+        .verticalFactor = EvaluatorVerticalLoop,
+        .sequenceData = { 10,
+                          { kRightVerticalLoopSeq0, kRightVerticalLoopSeq1, kRightVerticalLoopSeq2, kRightVerticalLoopSeq3,
+                            kRightVerticalLoopSeq4, kRightVerticalLoopSeq5, kRightVerticalLoopSeq6, kRightVerticalLoopSeq7,
+                            kRightVerticalLoopSeq8, kRightVerticalLoopSeq9 } },
+    };
+
+    constexpr auto kTEDDiagHalfLoopUp = TrackElementDescriptor{
+        .description = STR_HALF_LOOP,
+        .coordinates = { 4, 6, 0, 168, -32, 32 },
+        .pieceLength = 60,
+        .curveChain = { TrackElemType::diagHalfLoopDown, TrackCurve::none },
+        .priceModifier = 294912,
+        .mirrorElement = TrackElemType::diagHalfLoopUp,
+        .flags = { TrackElementFlag::up, TrackElementFlag::normalToInversion, TrackElementFlag::startsAtHalfHeight,
+                   TrackElementFlag::inversionToNormal },
+        .definition = { TrackGroup::halfLoop, TrackPitch::none, TrackPitch::up25, TrackRoll::upsideDown, TrackRoll::none, 64 },
+        .verticalFactor = EvaluatorHalfLoopUp,
+        .sequenceData = { 10,
+                          { kDiagHalfLoopUpSeq0, kDiagHalfLoopUpSeq1, kDiagHalfLoopUpSeq2, kDiagHalfLoopUpSeq3,
+                            kDiagHalfLoopUpSeq4, kDiagHalfLoopUpSeq5, kDiagHalfLoopUpSeq6, kDiagHalfLoopUpSeq7,
+                            kDiagHalfLoopUpSeq8, kDiagHalfLoopUpSeq9 } }
+    };
+
+    constexpr auto kTEDDiagHalfLoopDown = TrackElementDescriptor{
+        .description = STR_HALF_LOOP,
+        .coordinates = { 4, 6, 168, 0, 32, -32 },
+        .pieceLength = 60,
+        .curveChain = { TrackCurve::none, TrackElemType::diagHalfLoopUp },
+        .priceModifier = 294912,
+        .mirrorElement = TrackElemType::diagHalfLoopDown,
+        .flags = { TrackElementFlag::down, TrackElementFlag::inversionToNormal },
+        .definition = { TrackGroup::halfLoop, TrackPitch::down25, TrackPitch::none, TrackRoll::none, TrackRoll::upsideDown,
+                        -64 },
+        .verticalFactor = EvaluatorHalfLoopDown,
+        .sequenceData = { 10,
+                          { kDiagHalfLoopDownSeq0, kDiagHalfLoopDownSeq1, kDiagHalfLoopDownSeq2, kDiagHalfLoopDownSeq3,
+                            kDiagHalfLoopDownSeq4, kDiagHalfLoopDownSeq5, kDiagHalfLoopDownSeq6, kDiagHalfLoopDownSeq7,
+                            kDiagHalfLoopDownSeq8, kDiagHalfLoopDownSeq9 } },
     };
 
 } // namespace OpenRCT2::TrackMetadata

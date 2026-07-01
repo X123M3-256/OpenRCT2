@@ -22408,7 +22408,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             if (direction == 3)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 15)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 15)),
                     { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22425,7 +22425,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             if (direction == 2)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 10)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 10)),
                     { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22441,7 +22441,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             if (direction == 0)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 0)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 0)),
                     { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22453,25 +22453,25 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             {
                 case 0:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 1)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 1)),
                         { -16, -16, height }, { { 4, 27, height + 0 }, { 32, 0, 64 } });
                     break;
                 case 1:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 5)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 5)),
                         { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 6)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 6)),
                         { -16, -16, height }, { { 16, 8, height + 80 }, { 32, 20, 1 } });
                     break;
                 case 2:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 11)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 11)),
                         { -16, -16, height }, { { -4, 5, height + 0 }, { 32, 0, 64 } });
                     break;
                 case 3:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 16)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 16)),
                         { -16, -16, height }, { { -16, 5, height + 32 }, { 32, 0, 32 } });
                     break;
             }
@@ -22490,7 +22490,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
         case 4:
             PaintAddImageAsParentRotated(
                 session, direction,
-                session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 5 * direction + 2)),
+                session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 5 * direction + 2)),
                 { -16, -16, height }, boundingBoxes[direction + 0]);
             MetalASupportsPaintSetupRotated(
                 session, supportType.metal, MetalSupportPlace::rightCorner, direction, supportHeights[direction + 0],
@@ -22511,25 +22511,25 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             {
                 case 0:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 3)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 3)),
                         { -16, -16, height }, { { 4, 27, height + 0 }, { 32, 0, 48 } });
                     break;
                 case 1:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 8)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 8)),
                         { -16, -16, height }, { { 0, 8, height + 44 }, { 32, 20, 1 } });
                     break;
                 case 2:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 13)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 13)),
                         { -16, -16, height }, { { -8, 5, height + 0 }, { 32, 1, 32 } });
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 14)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 14)),
                         { -16, -16, height }, { { 16, 16, height + 46 }, { 32, 32, 1 } });
                     break;
                 case 3:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 18)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 18)),
                         { -16, -16, height }, { { 0, 4, height + 44 }, { 32, 20, 1 } });
                     break;
             }
@@ -22547,7 +22547,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             if (direction == 1)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 9)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 9)),
                     { -16, -16, height }, { { -16, -16, height + 22 }, { 32, 32, 1 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22558,7 +22558,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             if (direction == 3)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 19)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 19)),
                     { -16, -16, height }, { { -16, -16, height + 22 }, { 32, 32, 1 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22573,7 +22573,7 @@ static void TwisterRCTrackDiagLeftLargeCorkscrewUp(
             if (direction == 0)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 4)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 4)),
                     { -16, -16, height }, { { 16, 16, height + 22 }, { 32, 32, 1 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22604,7 +22604,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             if (direction == 3)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 35)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 35)),
                     { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22621,7 +22621,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             if (direction == 0)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 20)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 20)),
                     { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22636,7 +22636,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             if (direction == 2)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 30)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 30)),
                     { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22648,25 +22648,25 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             {
                 case 0:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 21)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 21)),
                         { -16, -16, height }, { { 5, -4, height + 0 }, { 0, 32, 64 } });
                     break;
                 case 1:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 25)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 25)),
                         { -16, -16, height }, { { -16, -16, height + 0 }, { 32, 32, 3 } });
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 26)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 26)),
                         { -16, -16, height }, { { 8, 16, height + 80 }, { 20, 32, 1 } });
                     break;
                 case 2:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 31)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 31)),
                         { -16, -16, height }, { { 27, 4, height + 0 }, { 0, 32, 64 } });
                     break;
                 case 3:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 36)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 36)),
                         { -16, -16, height }, { { 5, -16, height + 32 }, { 0, 32, 32 } });
                     break;
             }
@@ -22685,7 +22685,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
         case 4:
             PaintAddImageAsParentRotated(
                 session, direction,
-                session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 5 * direction + 22)),
+                session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 5 * direction + 22)),
                 { -16, -16, height }, boundingBoxes[direction + 0]);
             MetalASupportsPaintSetupRotated(
                 session, supportType.metal, MetalSupportPlace::rightCorner, direction, supportHeights[direction + 0],
@@ -22706,25 +22706,25 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             {
                 case 0:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 23)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 23)),
                         { -16, -16, height }, { { 5, -8, height + 0 }, { 1, 32, 32 } });
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 24)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 24)),
                         { -16, -16, height }, { { 16, 16, height + 46 }, { 32, 32, 1 } });
                     break;
                 case 1:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 28)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 28)),
                         { -16, -16, height }, { { 8, 0, height + 44 }, { 20, 32, 1 } });
                     break;
                 case 2:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 33)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 33)),
                         { -16, -16, height }, { { 27, 4, height + 0 }, { 0, 32, 48 } });
                     break;
                 case 3:
                     PaintAddImageAsParentRotated(
-                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 38)),
+                        session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 38)),
                         { -16, -16, height }, { { 4, 0, height + 44 }, { 20, 32, 1 } });
                     break;
             }
@@ -22742,7 +22742,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             if (direction == 1)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 29)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 29)),
                     { -16, -16, height }, { { -16, -16, height + 22 }, { 32, 32, 1 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22753,7 +22753,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             if (direction == 3)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 39)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 39)),
                     { -16, -16, height }, { { -16, -16, height + 22 }, { 32, 32, 1 } });
             }
             PaintUtilSetSegmentSupportHeight(
@@ -22768,7 +22768,7 @@ static void TwisterRCTrackDiagRightLargeCorkscrewUp(
             if (direction == 2)
             {
                 PaintAddImageAsParentRotated(
-                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_CORKSCREW_DIAGONAL + 34)),
+                    session, direction, session.TrackColours.WithIndex((SPR_TRACKS_BM_TRACK_LARGE_CORKSCREW_DIAGONAL + 34)),
                     { -16, -16, height }, { { 16, 16, height + 22 }, { 32, 32, 1 } });
             }
             PaintUtilSetSegmentSupportHeight(
